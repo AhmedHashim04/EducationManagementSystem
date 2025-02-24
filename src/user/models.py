@@ -33,4 +33,4 @@ class Profile(models.Model):
         return f'Dr {self.user.first_name}  {self.user.first_name}' if self.role == 'instructor' \
           else f'   {self.user.first_name}  {self.user.first_name}'
 
-    
+
