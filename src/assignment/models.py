@@ -1,6 +1,6 @@
 from django.db import models
-from ..user.models import Profile
-from ..course.models import Course
+from user.models import Profile
+from course.models import Course
 
 
 class Assignment(models.Model):
