@@ -12,7 +12,7 @@ class Course(models.Model):
     manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
-    Instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses')
+    instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses')
     # chaphters = models.ManyToManyField('Chapter', verbose_name=_("Chapters"), related_name='courses')
 
 
