@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status 
 
@@ -22,27 +22,12 @@ class CourseList(APIView):
         return Response(serialNewCourse.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CourseDetails(APIView):
-
-
-    def get(self, request,id):
-        course = Course.objects.get(pk = id)
-        jsonCourses = CourseDetailsSerializer(course).data
-        return Response(jsonCourses) 
-    
-    def put(self, request,id):
-        course = Course.objects.get(pk = id)
-        serialEditCourse = CourseDetailsSerializer(course, data=request.data)
-        if serialEditCourse.is_valid():
-            serialEditCourse.save()
-            return Response(serialEditCourse.data, status=status.HTTP_201_CREATED)
-        return Response(serialEditCourse.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request,id):
-        course = Course.objects.get(pk = id)
-        course.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-class CourseCreate(CreateAPIView):
+class CourseDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseDetailsSerializer
+    lookup_field = 'id'
+
+    
+class CourseCreate(generics.CreateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer

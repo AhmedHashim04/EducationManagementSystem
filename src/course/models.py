@@ -17,7 +17,7 @@ class Course(models.Model):
 
 
     def __str__(self):
-        return f'{self.code} - {self.name} - Dr : {self.Instructor.user.first_name} {self.Instructor.user.last_name}'
+        return f'{self.code} - {self.name} - Dr : {self.instructor.user.first_name} {self.instructor.user.last_name}'
     
 class CourseRegistration(models.Model):
     student_id = models.ForeignKey(Profile, verbose_name=_("Student"), on_delete=models.CASCADE,limit_choices_to='student' ,related_name='registrations')
