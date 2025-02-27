@@ -4,7 +4,8 @@ from .models import Course , CourseRegistration
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['name']
+        fields = ['code','name']
+
 class CourseDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course

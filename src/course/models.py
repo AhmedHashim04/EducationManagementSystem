@@ -7,7 +7,7 @@ class Course(models.Model):
     code = models.CharField(_("Code"), max_length=50)
     name = models.CharField(_("Name"), max_length=50)
     description = models.TextField(_("Description"))
-    credit = models.FloatField(_("Credit"))
+    credit = models.FloatField(_("Credit"),null=True, blank=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
