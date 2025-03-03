@@ -28,3 +28,4 @@ class CourseRegistration(models.Model):
 
     def __str__(self):
         return f'{self.student_id.user.first_name} {self.student_id.user.last_name} in {self.course_id.name}'
+
