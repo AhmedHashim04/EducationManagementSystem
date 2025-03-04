@@ -21,7 +21,7 @@ from django.urls.conf import include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('course/', include('course.urls',namespace='course')),
-    path('user/', include('user.urls',namespace='user')),
+    path('account/', include('account.urls',namespace='account')),
     path('assignment/', include('assignment.urls',namespace='assignment')),
 
 ]

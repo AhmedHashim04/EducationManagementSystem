@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
-from user.models import Profile
+from account.models import Profile
 # Create your models here.
 
 class Course(models.Model):

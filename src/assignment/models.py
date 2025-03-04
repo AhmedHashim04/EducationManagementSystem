@@ -1,5 +1,5 @@
 from django.db import models
-from user.models import Profile
+from account.models import Profile
 from course.models import Course
 import uuid
 
