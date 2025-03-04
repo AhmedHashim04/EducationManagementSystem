@@ -1,17 +1,13 @@
-
 from django.contrib import admin
 from django.urls import path
-from rest_framework import routers
-from .views import AssignmentViewSet 
+from .views import CourseAssignments, CertainAssignment
 from django.urls import include
 
 app_name = 'assignment'
 
-router = routers.DefaultRouter()
-router.register('assignments', AssignmentViewSet)
-
 urlpatterns = [
-	path('', include(router.urls)),
+    path('<str:course_code>/', CourseAssignments.as_view(), name='assignments'),
+    path('<str:course_code>/<int:id>/', CertainAssignment.as_view(), name='one_assignment'),
 ]
 
 

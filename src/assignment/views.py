@@ -1,12 +1,22 @@
 from django.shortcuts import render
-from rest_framework import viewsets
-from .models import Assignment , Grade
-from .serializer import AssignmentSerializer #, GradeSerializer
+from .models import Assignment, Grade
+from rest_framework import generics
+from .serializer import CourseAssignmentsSerializer , AssignmentSerializer
+
 # Create your views here.
 
+# for Course Instructor
+class CourseAssignments(generics.ListCreateAPIView):
+    serializer_class = CourseAssignmentsSerializer
 
+    def get_queryset(self):
+        course_id = self.kwargs['course_code']
+        return Assignment.objects.filter(course__code=course_id)
 
-class AssignmentViewSet(viewsets.ModelViewSet):
-    queryset = Assignment.objects.all()
+class CertainAssignment(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AssignmentSerializer
-    lookup_field = 'id'
+    lookup_field = 'id' 
+    def get_queryset(self):
+        slug = self.kwargs['id']
+        course_id = self.kwargs['course_code']
+        return Assignment.objects.filter(course__code=course_id, id=slug)

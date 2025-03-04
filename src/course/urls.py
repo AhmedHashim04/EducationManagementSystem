@@ -6,9 +6,9 @@ from .views import CourseList, CourseDetails, CourseCreate
 app_name = 'course'
 
 urlpatterns = [
-    path('allcourses/',CourseList.as_view(),name='courseList'),
+    path('',CourseList.as_view(),name='courseList'),
     path('createcourse/',CourseCreate.as_view(),name='courseCreate'),
-    path('<int:id>',CourseDetails.as_view(),name='courseDetails'),
+    path('<str:courseCode>/',CourseDetails.as_view(),name='courseDetails'),
     
 
 ]
