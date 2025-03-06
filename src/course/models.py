@@ -7,7 +7,7 @@ class Course(models.Model):
     code = models.CharField(_("Code"), max_length=50)
     name = models.CharField(_("Name"), max_length=50)
     description = models.TextField(_("Description"))
-    credit = models.FloatField(_("Credit"),null=True, blank=True)
+    credit = models.FloatField(_("Credit"),null=True, blank=True ,default=0)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
@@ -24,6 +24,7 @@ class CourseRegistration(models.Model):
     course_id = models.ForeignKey(Course, verbose_name=_("Course"), on_delete=models.CASCADE, related_name='registrations')
     status = models.CharField(max_length=10, default='pending', choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')])
     register_at = models.DateTimeField(auto_now_add=True)
+    
     # accepted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):

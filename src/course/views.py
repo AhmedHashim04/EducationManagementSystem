@@ -3,6 +3,9 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
 
 from assignment.models import Assignment
 from assignment.serializer import CourseAssignmentsSerializer
@@ -15,6 +18,8 @@ from .serializer import CourseSerializer, CourseDetailsSerializer
 class CourseList(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 
 
