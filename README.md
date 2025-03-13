@@ -1,6 +1,6 @@
 # 📚 EMS System - Education Management System
 
-🚀 **EMS System** is a fully-featured education management system that provides an interactive environment for students, instructors, and assistants. It supports course management, assignments, and an internal chat system.
+🚀 **EMS System** is a fully-featured education management system that provides an interactive environment for students, instructors, and assistants. It supports course management, assignments, chat, and grading system.
 
 ---
 
@@ -43,24 +43,69 @@
 
 ## 🚀 Setup & Installation  
 
-### 1️⃣ Install Dependencies  
+### 🟢 Windows Setup  
+1️⃣ **Install Python and PostgreSQL**  
+- Download and install [Python](https://www.python.org/downloads/)  
+- Download and install [PostgreSQL](https://www.postgresql.org/download/)  
+
+2️⃣ **Set Up Virtual Environment**  
 ```sh
+cd path	o\your\project
+python -m venv venv
+venv\Scriptsctivate
+```
+
+3️⃣ **Install Dependencies**  
+```sh
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Apply Migrations  
+4️⃣ **Configure PostgreSQL Database**  
+- Open **pgAdmin** or connect via terminal.  
+- Create a database (e.g., `ems_db`).  
+- Update `DATABASES` settings in `settings.py`.  
+
+5️⃣ **Apply Migrations & Create Superuser**  
 ```sh
 python manage.py migrate
+python manage.py createsuperuser
 ```
 
-### 3️⃣ Run the Server  
+6️⃣ **Run the Server**  
 ```sh
 python manage.py runserver
 ```
 
-### 4️⃣ Create an Admin User  
+✅ Open **`http://127.0.0.1:8000/`** in your browser.  
+
+### 🟢 Linux Setup  
 ```sh
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip python3-venv postgresql postgresql-contrib -y
+cd /path/to/your/project
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+🔹 **Configure PostgreSQL**  
+```sh
+sudo -i -u postgres
+psql
+CREATE DATABASE ems_db;
+CREATE USER your_username WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE ems_db TO your_username;
+\q
+exit
+```
+
+🔹 **Apply Migrations & Run Server**  
+```sh
+python manage.py migrate
 python manage.py createsuperuser
+python manage.py runserver
 ```
 
 ---
@@ -73,6 +118,7 @@ python manage.py createsuperuser
 | `POST` | `/api/auth/register/` | Register a new user |
 | `POST` | `/api/auth/login/` | Authenticate and obtain a token |
 | `POST` | `/api/auth/logout/` | Log out the user |
+| `POST` | `/api/auth/forgot-password/` | Request password reset |
 
 ### 📚 Courses  
 | Method | Endpoint | Description |
@@ -88,6 +134,14 @@ python manage.py createsuperuser
 | `GET`  | `/api/assignments/` | List all assignments |
 | `POST` | `/api/assignments/` | Create a new assignment (Instructor only) |
 | `POST` | `/api/assignments/submit/` | Submit an assignment (Student only) |
+| `POST` | `/api/assignments/grade/` | Grade an assignment (Instructor only) |
+
+### 💬 Chat System  
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET`  | `/api/chat/conversations/` | Get all conversations for a user |
+| `POST` | `/api/chat/message/` | Send a message |
+| `GET`  | `/api/chat/messages/{conversation_id}/` | Retrieve messages in a conversation |
 
 ---
 
