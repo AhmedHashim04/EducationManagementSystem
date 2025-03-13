@@ -44,12 +44,12 @@
 ## 🚀 Setup & Installation  
 
 
-
-###  Clone the Repository  
+0️⃣ Clone the Repository  
 ```sh
 mkdir project
 cd project
 git clone https://github.com/AhmedHashim04/EducationManagementSystem.git .
+
 
 ### 🟢 Windows Setup  
 1️⃣ **Install Python and PostgreSQL**  
