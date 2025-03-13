@@ -43,6 +43,14 @@
 
 ## 🚀 Setup & Installation  
 
+
+
+###  Clone the Repository  
+```sh
+mkdir project
+cd project
+git clone https://github.com/AhmedHashim04/EducationManagementSystem.git .
+
 ### 🟢 Windows Setup  
 1️⃣ **Install Python and PostgreSQL**  
 - Download and install [Python](https://www.python.org/downloads/)  
@@ -50,9 +58,8 @@
 
 2️⃣ **Set Up Virtual Environment**  
 ```sh
-cd path	o\your\project
-python -m venv venv
-venv\Scriptsctivate
+python -m venv .
+venv\Scripts\activate
 ```
 
 3️⃣ **Install Dependencies**  
@@ -83,8 +90,7 @@ python manage.py runserver
 ```sh
 sudo apt update && sudo apt upgrade -y
 sudo apt install python3 python3-pip python3-venv postgresql postgresql-contrib -y
-cd /path/to/your/project
-python3 -m venv venv
+python3 -m venv .
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
