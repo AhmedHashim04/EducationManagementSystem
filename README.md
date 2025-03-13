@@ -49,7 +49,7 @@
 mkdir project
 cd project
 git clone https://github.com/AhmedHashim04/EducationManagementSystem.git .
-
+```
 
 ### 🟢 Windows Setup  
 1️⃣ **Install Python and PostgreSQL**  
