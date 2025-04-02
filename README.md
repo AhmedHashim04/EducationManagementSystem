@@ -75,6 +75,7 @@ pip install -r src\requirements.txt
 
 5️⃣ **Apply Migrations & Create Superuser**  
 ```sh
+cd src
 python manage.py migrate
 python manage.py createsuperuser
 ```
