@@ -59,13 +59,13 @@ git clone https://github.com/AhmedHashim04/EducationManagementSystem.git .
 2️⃣ **Set Up Virtual Environment**  
 ```sh
 python -m venv .
-venv\Scripts\activate
+.\Scripts\activate
 ```
 
 3️⃣ **Install Dependencies**  
 ```sh
-pip install --upgrade pip
-pip install -r requirements.txt
+python.exe -m pip install --upgrade pip
+pip install -r src\requirements.txt
 ```
 
 4️⃣ **Configure PostgreSQL Database**  
