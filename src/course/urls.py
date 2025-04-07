@@ -10,7 +10,7 @@ urlpatterns = [
     path('my/',MyCourseList.as_view(),name='mycourseList'),
     path('my/<str:courseCode>/',CourseDetails.as_view(),name='courseDetails'),
     path('enroll_student/<str:course_code>/', enroll_student, name='enroll_student'),
-    path('unenroll_student/<str:course_code>/', unenroll_student, name='unenroll_student'),
+    path('my/<str:courseCode>/unenroll_student/', unenroll_student, name='unenroll_student'),
 
 ]
 

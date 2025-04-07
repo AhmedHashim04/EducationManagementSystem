@@ -39,8 +39,6 @@ class CourseList(generics.ListAPIView):
     # authentication_classes = [TokenAuthentication]
     # permission_classes = [IsAuthenticated]
 
-
-
 class MyCourseList(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
@@ -57,7 +55,6 @@ class MyCourseList(generics.ListAPIView):
             return courses
         
         return super().get_object()
-
 
 class CourseDetails(generics.RetrieveAPIView):
     queryset = Course.objects.all()
@@ -89,8 +86,6 @@ class CourseDetails(generics.RetrieveAPIView):
             'course': serializer.data,
             'assignments': list(assignments)
         })
-
-
 
 def is_student(request):
     if request.user.profile.role != 'student':
