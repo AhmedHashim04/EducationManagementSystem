@@ -24,7 +24,7 @@ class SolutiontSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
         fields = ( 'sloution', 'grade', )
-        read_only_fields = ('grade', )
+        read_only_fields = ('grade', 'assignment' )
     def get_grade(self, obj):
         if obj.grade == -1:
             return "Not graded yet"
@@ -33,7 +33,16 @@ class SolutiontSerializer(serializers.ModelSerializer):
 
 
 class GradeSerializer(serializers.ModelSerializer):
+    # student=serializers.SerializerMethodField()
     class Meta:
         model = Grade
-        fields = ('assignment', 'student', 'sloution', 'grade', ) 
-        read_only_fields = ('assignment', 'student','sloution' )
+        fields = ('assignment','student', 'sloution', 'grade' ) 
+        read_only_fields = ('assignment','sloution' )
+
+    # def get_student(self, obj):
+    #     student = obj.student
+    #     return {
+    #         'id': student.id,
+    #         'name': student.user.first_name+student.user.last_name,
+    #     }
+

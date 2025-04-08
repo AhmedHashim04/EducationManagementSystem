@@ -25,6 +25,7 @@ urlpatterns = [
     path('courses/', include('course.urls',namespace='course')),
     path('courses/my/', include('assignment.urls',namespace='assignment')),
 
+    path('logout/', include('rest_framework.urls',namespace='logout')),
 ]
 
 

@@ -7,7 +7,7 @@ from .models import User
 #         model = Profile
 #         fields = "_all_"
 
-
+ 
 
 class RegisterForm(UserCreationForm):
     class Meta:

@@ -35,9 +35,6 @@ class CourseList(generics.ListAPIView):
         return super().get_object()
 
 
-    
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
 
 class MyCourseList(generics.ListAPIView):
     queryset = Course.objects.all()
