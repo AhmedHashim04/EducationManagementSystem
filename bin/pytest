@@ -1,8 +1,0 @@
-#!/media/ahmed/e94fc704-3a90-4a04-84aa-5ab280ec4e79/API/project/bin/python
-# -*- coding: utf-8 -*-
-import re
-import sys
-from pytest import console_main
-if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(console_main())
