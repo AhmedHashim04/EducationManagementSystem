@@ -1,0 +1,27 @@
+# Ignore Python virtual environment
+venv/
+env/
+lib/
+lib64/
+bin/
+pyvenv.cfg
+.pytest_cache
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Django stuff
+*.sqlite3
+*.log
+*.pot
+*.pyc
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Environment variables
+.env
+EXPLAIN PROJECt.txt
