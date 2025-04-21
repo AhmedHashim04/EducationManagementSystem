@@ -1,5 +1,14 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import *
-from .form import RegisterForm
 
+from rest_framework.generics import CreateAPIView
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
+from .models import Profile
+
+
+class Register(CreateAPIView):
+    model = User
+    serializer_class = RegisterSerializer
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        return user

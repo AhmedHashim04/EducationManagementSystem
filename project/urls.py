@@ -22,8 +22,9 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('account/', include('account.urls',namespace='account')),
+    
     path('courses/', include('course.urls',namespace='course')),
-    path('courses/my/', include('assignment.urls',namespace='assignment')),
+    path('courses/me/', include('assignment.urls',namespace='assignment')),
 
     path('logout/', include('rest_framework.urls',namespace='logout')),
 ]

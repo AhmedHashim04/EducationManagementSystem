@@ -28,36 +28,22 @@ class Profile(models.Model):
         ('student','Student')
     )
 
-    STATUS = (
-
-        ('banned','Banned'),
-        ('active','Active')
-    ) 
-
     user = models.OneToOneField(User, verbose_name=_("User"), on_delete=models.CASCADE)
 
     role = models.CharField(choices  = ROLES , verbose_name=_("Role"), max_length=50)
-    status = models.CharField(choices  = STATUS , verbose_name=_("Status"), max_length=50)
     
 
     def __str__(self):
         return f'Dr {self.user.first_name}  {self.user.first_name}' if self.role == 'instructor' \
           else f'   {self.user.first_name}  {self.user.first_name}'
 
-        # @receiver(post_save, sender=User)
-        # def create_or_update_profile(sender, instance, created, **kwargs):
-        #     if created:
-        #         Profile.objects.create(user=instance, role='student', status='active')
-        #         Token.objects.create(user=instance)
-        #     else:
-        #         instance.profile.save()
-        #         Token.objects.get_or_create(user=instance)
-
         
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created and not Profile.objects.filter(user=instance).exists():
-        Profile.objects.create(user=instance, role='student', status='active')
+        # Get role from instance's temporary attribute or default to 'student'
+        role = getattr(instance, '_role', 'student')
+        Profile.objects.create(user=instance, role=role)
         Token.objects.create(user=instance)
     else:
         profile = Profile.objects.get(user=instance)
