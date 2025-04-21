@@ -2,43 +2,39 @@ from django.core.exceptions import PermissionDenied
 from rest_framework import generics
 from rest_framework.response import Response
 from account.permessions import  IsStudent, IsInstructor 
-from rest_framework.authentication import TokenAuthentication , BasicAuthentication 
-from rest_framework.decorators import api_view 
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from django.shortcuts import get_object_or_404
-
-from assignment.models import Assignment
-
 from .models import Course, CourseRegistration
-from .serializer import CourseSerializer, CourseDetailsSerializer
+from account.models import Profile
+from .serializers import CourseListSerializer, CourseDetailsSerializer
 
 
-    
+
 class CourseList(generics.ListAPIView):
     queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+    serializer_class = CourseListSerializer
 
-    authentication_classes = [BasicAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsStudent | IsInstructor]
 
     def get_queryset(self):
         user_profile = getattr(self.request.user, 'profile', None)
-        if not user_profile:
-            return Course.objects.none()
-        print(user_profile)
-        if user_profile.role == 'student':
-            return Course.objects.exclude(registrations__student=user_profile)
+        if user_profile:
+        
+            if user_profile.role == 'student':
+                return Course.objects.exclude(registrations__student=user_profile)
 
-        elif user_profile.role == 'instructor':
-            return Course.objects.exclude(instructor=user_profile)
+            elif user_profile.role == 'instructor':
+                return Course.objects.exclude(instructor=user_profile)
 
-        return Course.objects.none()
+        return Course.objects.all()
 
-
-class MyCourses(generics.ListAPIView):
+class MyCoursesList(generics.ListAPIView):
     queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+    serializer_class = CourseListSerializer
 
-    authentication_classes = [BasicAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsStudent | IsInstructor]
 
     def get_queryset(self):
@@ -57,7 +53,7 @@ class CourseDetails(generics.RetrieveAPIView):
     lookup_field = 'code'
     lookup_url_kwarg = 'courseCode'
 
-    authentication_classes = [ BasicAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsStudent | IsInstructor]
 
     def is_enrolled(self, course):
@@ -68,13 +64,6 @@ class CourseDetails(generics.RetrieveAPIView):
         instructor_id = self.request.user.profile
         return Course.objects.filter(instructor=instructor_id, code=course.code).exists()
     
-    def is_student(request):
-        if request.user.profile.role != 'student':
-            raise PermissionDenied('Only students can enroll or unenroll in courses')
-    
-    def get_course(course_code):
-        return get_object_or_404(Course, code=course_code)
-    
     def retrieve(self, request, *args, **kwargs):
         course = self.get_object()
         
@@ -84,17 +73,16 @@ class CourseDetails(generics.RetrieveAPIView):
                 status=403
             )
 
-        assignments = Assignment.objects.filter(course=course).values_list('title', flat=True)
         serializer = self.get_serializer(course)
 
         return Response({
             'course': serializer.data,
-            'assignments': list(assignments)
         })
 
 
 
 
+@authentication_classes([JWTAuthentication])
 @api_view(['GET'])
 def enroll_student(request, course_code):
 
@@ -110,14 +98,17 @@ def enroll_student(request, course_code):
     CourseRegistration.objects.create(student=student, course=course, status='accepted')
     return Response({'message': 'Student enrolled successfully'}, status=200)
 
+
+@authentication_classes([JWTAuthentication])
 @api_view(['GET'])
 def unenroll_student(request, course_code):
 
     student = request.user.profile
     course = get_object_or_404(Course, code=course_code)
 
-    if not CourseRegistration.objects.filter(student=student, course_=course).exists():
+    registration = CourseRegistration.objects.filter(student=student, course=course)
+    if not registration.exists():
         return Response({'error': 'Student is not enrolled in this course'}, status=400)
 
-    CourseRegistration.objects.filter(student=student, course=course).delete()
+    registration.delete()
     return Response({'message': 'Student unenrolled successfully'}, status=200)

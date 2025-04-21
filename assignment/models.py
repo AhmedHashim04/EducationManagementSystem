@@ -3,7 +3,7 @@ from account.models import Profile
 from course.models import Course
 import uuid
 from django.core.validators import MinValueValidator, MaxValueValidator
- 
+
 class Assignment(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     title = models.CharField(max_length=255, blank=False, null=False)

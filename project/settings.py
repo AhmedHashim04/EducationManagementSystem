@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'assignment',
     # 'chat',
 ]
-  
+
 REST_FRAMEWORK = {
 # BasicAuthentication // SessionAuthentication // TokenAuthentication
     
@@ -57,9 +57,9 @@ REST_FRAMEWORK = {
 
 # AllowAny // IsAuthenticated // IsAdminUser // IsAuthenticatedOrReadOnly
 
-    'DEFAULT_PERMISSION_CLASSES': [ 
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [ 
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
 
 }
 

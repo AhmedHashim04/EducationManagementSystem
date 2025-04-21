@@ -1,7 +1,9 @@
-from django.shortcuts import render
 from .models import Assignment, Solution , Grade
 from rest_framework import generics 
 from .serializer import CourseAssignmentsSerializer , ViewAssignmentsSerializer ,SolutionSerializer ,GradeSerializer ,UpdateSolutionSerializer , SudentsSolutionsSerializer
+from account.permessions import  IsStudent, IsInstructor 
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from datetime import timedelta
 from django.utils import timezone
 from course.models import Course  ,CourseRegistration
@@ -11,9 +13,8 @@ from account.models import Profile
 
 class CreatAssignment(generics.ListCreateAPIView):
     serializer_class = ViewAssignmentsSerializer
-
-
-
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [ IsInstructor | IsStudent ]
     def is_student_registered(self, course):
         """Check if the current user is a student registered in the course."""
         return (
@@ -26,7 +27,6 @@ class CreatAssignment(generics.ListCreateAPIView):
         print(self.request.user.profile.role)
         return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
         
-    
 
     def get_course(self):
         course_code = self.kwargs['course_code']
@@ -61,6 +61,8 @@ class CreatAssignment(generics.ListCreateAPIView):
 class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseAssignmentsSerializer
     lookup_url_kwarg = 'assignment_id'
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [ IsInstructor | IsStudent ]
 
     def is_student_registered(self, course):
         """Check if the current user is a student registered in the course."""
@@ -103,38 +105,40 @@ class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response({"detail": "You do not have permission to delete assignments for this course."}, status=403)
 
 class SolveAssignment(generics.CreateAPIView,
-                          generics.RetrieveAPIView,
-                          generics.UpdateAPIView,
-                          generics.DestroyAPIView):
+                        generics.RetrieveAPIView,
+                        generics.UpdateAPIView,
+                        generics.DestroyAPIView):
         
-        serializer_class = SolutionSerializer
-        lookup_field = 'assignment_id'
+    serializer_class = SolutionSerializer
+    lookup_field = 'assignment_id'
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [ IsInstructor | IsStudent ]
         
 
-        def is_student_registered(self, course):
+    def is_student_registered(self, course):
             """Check if the current user is a student registered in the course."""
             return (
                 self.request.user.profile.role == 'student' and
                 CourseRegistration.objects.filter(student=self.request.user.profile, course=course).exists()
             )
         
-        def is_the_real_instructor(self, course):
+    def is_the_real_instructor(self, course):
             """Check if the current user is the instructor of the course."""
             return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
 
-        def get_course(self):
+    def get_course(self):
             course_code = self.kwargs['course_code']
             return get_object_or_404(Course, code=course_code)
         
-        def get_assignment(self):
+    def get_assignment(self):
             assignment_id = self.kwargs['assignment_id']
             return get_object_or_404(Assignment, course=self.get_course(), id=assignment_id)
         
-        def student_solution(self):
+    def student_solution(self):
             student_id = self.request.user.profile
             return Solution.objects.filter(assignment=self.get_assignment(), student=student_id).first()
 
-        def get_queryset(self):
+    def get_queryset(self):
             course = self.get_course()
 
             if self.is_student_registered(course):
@@ -144,7 +148,7 @@ class SolveAssignment(generics.CreateAPIView,
                 return Solution.objects.filter(assignment = self.get_assignment()).all()
 
 
-        def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
             course = self.get_course()
             assignment = self.get_assignment()
 
@@ -162,25 +166,25 @@ class SolveAssignment(generics.CreateAPIView,
                 else:
                         return Response({"detail": "The assignment is already past its due date."}, status=400)
             return Response({"detail": "You do not have permission to submit solutions for this course."}, status=403)
- 
-        def retrieve(self, request, *args, **kwargs):
+
+    def retrieve(self, request, *args, **kwargs):
             course = self.get_course()
 
             if self.is_student_registered(course):
 
                 if self.student_solution():
-                     assignment = self.get_assignment()
-                     solution = self.student_solution()
+                    assignment = self.get_assignment()
+                    solution = self.student_solution()
 
-                     assignment_serializer = ViewAssignmentsSerializer(assignment)
-                     solution_serializer = SolutionSerializer(solution)
+                    assignment_serializer = ViewAssignmentsSerializer(assignment)
+                    solution_serializer = SolutionSerializer(solution)
 
-                     return Response({"assignment": assignment_serializer.data, "solution": solution_serializer.data}, status=404)
+                    return Response({"assignment": assignment_serializer.data, "solution": solution_serializer.data}, status=404)
             
                 else:
-                     assignment = self.get_assignment()
-                     serializer = ViewAssignmentsSerializer(assignment)
-                     return Response({"assignment": serializer.data, "detail": "You have not submitted a solution for this assignment."}, status=404)
+                    assignment = self.get_assignment()
+                    serializer = ViewAssignmentsSerializer(assignment)
+                    return Response({"assignment": serializer.data, "detail": "You have not submitted a solution for this assignment."}, status=404)
             
             elif self.is_the_real_instructor(course):
                 assignment = self.get_assignment()
@@ -195,7 +199,7 @@ class SolveAssignment(generics.CreateAPIView,
             else:
                 return Response({"detail": "You do not have permission to view solutions for this course."}, status=403)
             
-        def update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
             course = self.get_course()
             assignment = self.get_assignment()
 
@@ -213,7 +217,7 @@ class SolveAssignment(generics.CreateAPIView,
                     return Response({"detail": "The assignment is already past its due date."}, status=400)
             return Response({"detail": "You do not have permission to update solutions for this course."}, status=403)
 
-        def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
             course = self.get_course()
             assignment = self.get_assignment()
 
@@ -235,7 +239,8 @@ class SolveAssignment(generics.CreateAPIView,
 class GradeListView(generics.ListCreateAPIView):
     serializer_class = GradeSerializer
     queryset = Grade.objects.all()
-    
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsInstructor]
     def is_the_real_instructor(self, course):
         """Check if the current user is the instructor of the course."""
         return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import Course, CourseRegistration
+from assignment.models import Assignment
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['code', 'name']
@@ -12,20 +13,22 @@ class CourseDetailsSerializer(serializers.ModelSerializer):
     instructor_name = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    assignments = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = [
             'name', 'code', 'description', 'credit', 'created_at', 'manager_name',
-            'updated_at', 'is_active', 'instructor_name'
+            'updated_at', 'is_active', 'instructor_name','assginments'
         ]
 
-    def get_manager_name(self, obj):
-        if obj.manager and obj.manager.user:
-            return f"{obj.manager.user.first_name} {obj.manager.user.last_name}"
-        return "Unknown"
+    def get_assignments(self, obj):
+        assignments =Assignment.objects.filter(course=obj).values_list('title', flat=True)
+        if assignments:
+            return assignments
+        return "No Assignments"
 
     def get_instructor_name(self, obj):
-        if obj.instructor and obj.instructor.user:
-            return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
+        if obj.instructor:
+            return f"{obj.instructor.first_name} {obj.instructor.last_name}"
         return "Unknown"

@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.urls import path
 from .views import CreatAssignment, AssignmentDetailView ,SolveAssignment ,GradeListView
 
-from django.conf import settings
-from django.urls import include
 
 app_name = 'assignment'
 
