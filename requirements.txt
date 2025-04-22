@@ -15,7 +15,7 @@ django-taggit==6.1.0
 django-widget-tweaks==1.5.0
 idna==3.8
 Pillow==10.4.0
-pip==24.2
+# pip==24.2
 pycountry==24.6.1
 python-slugify==8.0.4
 requests==2.32.3

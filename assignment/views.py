@@ -1,6 +1,6 @@
 from .models import Assignment, Solution , Grade
 from rest_framework import generics 
-from .serializer import CourseAssignmentsSerializer , ViewAssignmentsSerializer ,SolutionSerializer ,GradeSerializer ,UpdateSolutionSerializer , SudentsSolutionsSerializer
+from .serializers import CourseAssignmentsSerializer , ViewAssignmentsSerializer ,SolutionSerializer ,GradeSerializer ,UpdateSolutionSerializer , SudentsSolutionsSerializer
 from account.permessions import  IsStudent, IsInstructor 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
