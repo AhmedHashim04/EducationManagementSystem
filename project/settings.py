@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'account',
     'course',
     'assignment',
-    # 'chat',
+    'chat',
 ]
 
 
