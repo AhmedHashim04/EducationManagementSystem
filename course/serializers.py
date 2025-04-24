@@ -8,7 +8,7 @@ class CourseListSerializer(serializers.ModelSerializer):
         fields = ['code', 'name']
 
 
-class CourseDetailsSerializer(serializers.ModelSerializer):
+class CourseDetailSerializer(serializers.ModelSerializer):
     manager_name = serializers.SerializerMethodField()
     instructor_name = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")

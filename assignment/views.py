@@ -1,281 +1,393 @@
-from .models import Assignment, Solution , Grade
-from rest_framework import generics 
-from .serializers import CourseAssignmentsSerializer , ViewAssignmentsSerializer ,SolutionSerializer ,GradeSerializer ,UpdateSolutionSerializer , SudentsSolutionsSerializer
-from account.permessions import  IsStudent, IsInstructor 
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from datetime import timedelta
-from django.utils import timezone
-from course.models import Course  ,CourseRegistration
+from rest_framework import generics, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from account.models import Profile
+from django.utils import timezone
+from .models import Assignment, Solution, Grade
+from .serializers import (
+    CourseAssignmentCreateSerializer,
+    AssignmentSolutionSerializer,
+    AssignmentSolutionUpdateSerializer,
+    StudentSolutionListSerializer,
+    AssignmentGradeListSerializer
+)
+from course.models import Course, CourseRegistration
+from account.permessions import IsStudent, IsInstructor
+from rest_framework.authentication import BasicAuthentication
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
-class CreatAssignment(generics.ListCreateAPIView):
-    serializer_class = ViewAssignmentsSerializer
-    # authentication_classes = [JWTAuthentication]
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [ IsInstructor | IsStudent ]
+class CourseAccessMixin:
+    """Base mixin for course access control"""
     def is_student_registered(self, course):
         """Check if the current user is a student registered in the course."""
         return (
             self.request.user.profile.role == 'student' and
-            CourseRegistration.objects.filter(student=self.request.user.profile, course=course).exists()
+            CourseRegistration.objects.filter(
+                student=self.request.user.profile,
+                course=course
+            ).exists()
         )
     
-    def is_the_real_instructor(self, course):
+    def is_course_instructor(self, course):
         """Check if the current user is the instructor of the course."""
-        print(self.request.user.profile.role)
-        return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
-        
+        return (
+            self.request.user.profile.role == 'instructor' and 
+            course.instructor == self.request.user.profile
+        )
 
     def get_course(self):
+        """Get course object from URL parameter."""
         course_code = self.kwargs['course_code']
         return get_object_or_404(Course, code=course_code)
 
+class AssignmentListCreateView(CourseAccessMixin, generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating assignments
+    """
+    serializer_class = CourseAssignmentCreateSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsInstructor | IsStudent]
+
+    @swagger_auto_schema(
+        operation_description="Get list of assignments for a course",
+        responses={
+            200: CourseAssignmentCreateSerializer(many=True),
+            403: "Access denied"
+        }
+    )
     def get_queryset(self):
         course = self.get_course()
         return Assignment.objects.filter(course=course)
 
+    @swagger_auto_schema(
+        operation_description="Create a new assignment",
+        request_body=CourseAssignmentCreateSerializer,
+        responses={
+            201: CourseAssignmentCreateSerializer,
+            403: "Only course instructor can create assignments"
+        }
+    )
     def create(self, request, *args, **kwargs):
         course = self.get_course()
-        print(self.is_the_real_instructor(course))
-        if self.is_the_real_instructor(course):
+        if not self.is_course_instructor(course):
+            return Response(
+                {"detail": "Only course instructor can create assignments."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(course=course)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(course=course)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            return Response(serializer.data, status=201)
-        
-        return Response({"detail": "You do not have permission to create assignments for this course."}, status=403)
-
+    @swagger_auto_schema(
+        operation_description="List all assignments in a course",
+        responses={
+            200: CourseAssignmentCreateSerializer(many=True),
+            403: "Access denied"
+        }
+    )
     def list(self, request, *args, **kwargs):
         course = self.get_course()
-
-        if self.is_the_real_instructor(course) or self.is_student_registered(course):
-            return super().list(request, *args, **kwargs)
-        
-        else:
-            return Response({"detail": "You do not have permission to view assignments for this course."}, status=403)
-
-class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = CourseAssignmentsSerializer
-    lookup_url_kwarg = 'assignment_id'
-    # authentication_classes = [JWTAuthentication]
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [ IsInstructor | IsStudent ]
-
-    def is_student_registered(self, course):
-        """Check if the current user is a student registered in the course."""
-        return (
-            self.request.user.profile.role == 'student' and
-            CourseRegistration.objects.filter(student=self.request.user.profile, course=course).exists()
-        )
-    
-    def is_the_real_instructor(self, course):
-        """Check if the current user is the instructor of the course."""
-        return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
-        
-
-    def get_course(self):
-        course_code = self.kwargs['course_code']
-        return get_object_or_404(Course, code=course_code)
-
-    def get_object(self):
-        course_code = self.kwargs['course_code']
-        assignment_id = self.kwargs['assignment_id']
-        return get_object_or_404(Assignment, course__code=course_code, id=assignment_id)
-
-    def retrieve(self, request, *args, **kwargs):
-        course = self.get_course()
-        if self.is_the_real_instructor(course) or self.is_student_registered(course):
-            return super().retrieve(request, *args, **kwargs)
-
-        return Response({"detail": "You do not have permission to view assignments for this course."}, status=403)
-
-    def update(self, request, *args, **kwargs):
-        course = self.get_course()
-        if self.is_the_real_instructor(course):
-            return super().update(request, *args, **kwargs)
-        return Response({"detail": "You do not have permission to update assignments for this course."}, status=403)
-
-    def destroy(self, request, *args, **kwargs):
-        course = self.get_course()
-        if self.is_the_real_instructor(course):
-            return super().destroy(request, *args, **kwargs)
-        return Response({"detail": "You do not have permission to delete assignments for this course."}, status=403)
-
-class SolveAssignment(generics.CreateAPIView,
-                        generics.RetrieveAPIView,
-                        generics.UpdateAPIView,
-                        generics.DestroyAPIView):
-        
-    serializer_class = SolutionSerializer
-    lookup_field = 'assignment_id'
-    # authentication_classes = [JWTAuthentication]
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [ IsInstructor | IsStudent ]
-        
-
-    def is_student_registered(self, course):
-            """Check if the current user is a student registered in the course."""
-            return (
-                self.request.user.profile.role == 'student' and
-                CourseRegistration.objects.filter(student=self.request.user.profile, course=course).exists()
+        if not (self.is_course_instructor(course) or self.is_student_registered(course)):
+            return Response(
+                {"detail": "Access denied."},
+                status=status.HTTP_403_FORBIDDEN
             )
-        
-    def is_the_real_instructor(self, course):
-            """Check if the current user is the instructor of the course."""
-            return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
+        return super().list(request, *args, **kwargs)
 
-    def get_course(self):
-            course_code = self.kwargs['course_code']
-            return get_object_or_404(Course, code=course_code)
-        
-    def get_assignment(self):
-            assignment_id = self.kwargs['assignment_id']
-            return get_object_or_404(Assignment, course=self.get_course(), id=assignment_id)
-        
-    def student_solution(self):
-            student_id = self.request.user.profile
-            return Solution.objects.filter(assignment=self.get_assignment(), student=student_id).first()
-
-    def get_queryset(self):
-            course = self.get_course()
-
-            if self.is_student_registered(course):
-                return Solution.objects.filter(student=self.request.user.profile).first()
-            
-            elif self.is_the_real_instructor(course):
-                return Solution.objects.filter(assignment = self.get_assignment()).all()
-
-
-    def create(self, request, *args, **kwargs):
-            course = self.get_course()
-            assignment = self.get_assignment()
-
-            if self.is_student_registered(course):
-                if assignment.due_date >= timezone.now().date():
-                    if not self.student_solution():
-
-                        serializer = self.get_serializer(data=request.data)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(assignment=assignment, student=request.user.profile)
-
-                        return Response(serializer.data, status=201)
-                    else:
-                        return Response({"detail": "You have already submitted a solution for this assignment."}, status=400)
-                else:
-                        return Response({"detail": "The assignment is already past its due date."}, status=400)
-            return Response({"detail": "You do not have permission to submit solutions for this course."}, status=403)
-
-    def retrieve(self, request, *args, **kwargs):
-            course = self.get_course()
-
-            if self.is_student_registered(course):
-
-                if self.student_solution():
-                    assignment = self.get_assignment()
-                    solution = self.student_solution()
-
-                    assignment_serializer = ViewAssignmentsSerializer(assignment)
-                    solution_serializer = SolutionSerializer(solution)
-
-                    return Response({"assignment": assignment_serializer.data, "solution": solution_serializer.data}, status=404)
-            
-                else:
-                    assignment = self.get_assignment()
-                    serializer = ViewAssignmentsSerializer(assignment)
-                    return Response({"assignment": serializer.data, "detail": "You have not submitted a solution for this assignment."}, status=404)
-            
-            elif self.is_the_real_instructor(course):
-                assignment = self.get_assignment()
-                solutions = Solution.objects.filter(assignment=assignment).all()
-
-                assignment_serializer = ViewAssignmentsSerializer(assignment)
-                solution_serializer = SudentsSolutionsSerializer(solutions, many=True)
-
-                return Response({"assignment": assignment_serializer.data, "solutions": solution_serializer.data}, status=404)
-                
-
-            else:
-                return Response({"detail": "You do not have permission to view solutions for this course."}, status=403)
-            
-    def update(self, request, *args, **kwargs):
-            course = self.get_course()
-            assignment = self.get_assignment()
-
-            if self.is_student_registered(course):
-                solution = self.student_solution()
-                if not solution:
-                    return Response({"detail": "You have not submitted a solution for this assignment."}, status=404)
-                
-                if assignment.due_date >= timezone.now().date():
-                    serializer = UpdateSolutionSerializer(solution, data=request.data, partial=True)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    return Response(serializer.data, status=200)
-                else:
-                    return Response({"detail": "The assignment is already past its due date."}, status=400)
-            return Response({"detail": "You do not have permission to update solutions for this course."}, status=403)
-
-    def destroy(self, request, *args, **kwargs):
-            course = self.get_course()
-            assignment = self.get_assignment()
-
-            if self.is_student_registered(course):
-                solution = self.student_solution()
-                if not solution:
-                    return Response({"detail": "You have not submitted a solution for this assignment."}, status=404)
-                
-                if assignment.due_date >= timezone.now().date():
-                    solution = self.student_solution()
-                    if solution:
-                        solution.delete()
-                        return Response({"detail": "Your solution has been successfully deleted."}, status=200)
-                    return Response({"detail": "You have not submitted a solution for this assignment."}, status=404)
-                else:
-                    return Response({"detail": "The assignment is already past its due date."}, status=400)
-            return Response({"detail": "You do not have permission to delete solutions for this course."}, status=403)
-        
-class GradeListView(generics.ListCreateAPIView):
-    serializer_class = GradeSerializer
-    queryset = Grade.objects.all()
-    # authentication_classes = [JWTAuthentication]
+class AssignmentDetailView(CourseAccessMixin, generics.RetrieveUpdateDestroyAPIView):
+    """
+    API endpoint for retrieving, updating and deleting assignments
+    """
+    serializer_class = CourseAssignmentCreateSerializer
+    lookup_url_kwarg = 'assignment_slug'
+    lookup_field = 'slug'
     authentication_classes = [BasicAuthentication]
-    permission_classes = [IsInstructor]
-    def is_the_real_instructor(self, course):
-        """Check if the current user is the instructor of the course."""
-        return self.request.user.profile.role == 'instructor' and course.instructor == self.request.user.profile
-    
-    def get_course(self):
-        course_code = self.kwargs['course_code']
-        return get_object_or_404(Course, code=course_code)
-        
+    permission_classes = [IsInstructor | IsStudent]
+
+    @swagger_auto_schema(
+        operation_description="Get a specific assignment",
+        responses={
+            200: CourseAssignmentCreateSerializer(),
+            404: "Assignment not found"
+        }
+    )
+    def get_object(self):
+        course = self.get_course()
+        return get_object_or_404(
+            Assignment,
+            course=course,
+            slug=self.kwargs['assignment_slug']
+        )
+
+    def check_course_access(self):
+        course = self.get_course()
+        if not (self.is_course_instructor(course) or self.is_student_registered(course)):
+            return Response(
+                {"detail": "Access denied."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return None
+
+    @swagger_auto_schema(
+        operation_description="Retrieve an assignment",
+        responses={
+            200: CourseAssignmentCreateSerializer(),
+            403: "Access denied",
+            404: "Not found"
+        }
+    )
+    def retrieve(self, request, *args, **kwargs):
+        access_response = self.check_course_access()
+        if access_response:
+            return access_response
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="Update an assignment",
+        request_body=CourseAssignmentCreateSerializer,
+        responses={
+            200: CourseAssignmentCreateSerializer(),
+            403: "Only instructor can update assignments",
+            404: "Not found"
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        course = self.get_course()
+        if not self.is_course_instructor(course):
+            return Response(
+                {"detail": "Only instructor can update assignments."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="Delete an assignment",
+        responses={
+            204: "No content",
+            403: "Only instructor can delete assignments",
+            404: "Not found"
+        }
+    )
+    def destroy(self, request, *args, **kwargs):
+        course = self.get_course()
+        if not self.is_course_instructor(course):
+            return Response(
+                {"detail": "Only instructor can delete assignments."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
+class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
+    """
+    API endpoint for managing assignment solutions
+    """
+    serializer_class = AssignmentSolutionSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsInstructor | IsStudent]
+
     def get_assignment(self):
-        assignment_id = self.kwargs['assignment_id']
-        return get_object_or_404(Assignment, course=self.get_course(), id=assignment_id)
-    
-    def get_queryset(self):
+        course = self.get_course()
+        return get_object_or_404(
+            Assignment,
+            course=course,
+            id=self.kwargs['assignment_id']
+        )
+
+    def get_student_solution(self):
+        return Solution.objects.filter(
+            assignment=self.get_assignment(),
+            student=self.request.user.profile
+        ).first()
+
+    @swagger_auto_schema(
+        operation_description="Submit a solution for an assignment",
+        request_body=AssignmentSolutionSerializer,
+        responses={
+            201: AssignmentSolutionSerializer(),
+            400: "Invalid request or solution already exists",
+            403: "Permission denied"
+        }
+    )
+    def post(self, request, *args, **kwargs):
         course = self.get_course()
         assignment = self.get_assignment()
-        if self.is_the_real_instructor(course):
-            return Grade.objects.filter(solution__assignment=assignment)
-        return super().get_queryset()
-    
 
+        if not self.is_student_registered(course):
+            return Response(
+                {"detail": "Only registered students can submit solutions."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-    # def list(self, request, *args, **kwargs):
-    #     course = self.get_assignment().course
+        if assignment.due_date < timezone.now().date():
+            return Response(
+                {"detail": "Assignment due date has passed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    #     if self.is_the_real_instructor(course):
-    #         solutions = Solution.objects.filter(assignment=self.get_assignment())
-    #         serializer = SolutionSerializer(solutions, many=True)
-    #         return Response(serializer.data, status=200)
+        if self.get_student_solution():
+            return Response(
+                {"detail": "Solution already submitted."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            assignment=assignment,
+            student=request.user.profile
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # @swagger_auto_schema(
+    #     operation_description="Get solutions for an assignment",
+    #     responses={
+    #         200: openapi.Response(
+    #             description="Success",
+    #             schema=openapi.Schema(
+    #                 type=openapi.TYPE_OBJECT,
+    #                 oneOf=[
+    #                     AssignmentSolutionSerializer,
+    #                     StudentSolutionListSerializer
+    #                 ]
+    #             )
+    #         ),
+    #         403: "Access denied",
+    #         404: "Solution not found"
+    #     }
+    # )
+    def get(self, request, *args, **kwargs):
+        course = self.get_course()
+        assignment = self.get_assignment()
+
+        if self.is_student_registered(course):
+            solution = self.get_student_solution()
+            if not solution:
+                return Response(
+                    {"detail": "No solution submitted."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            return Response(
+                self.get_serializer(solution).data,
+                status=status.HTTP_200_OK
+            )
+
+        if self.is_course_instructor(course):
+            solutions = Solution.objects.filter(assignment=assignment)
+            return Response(
+                StudentSolutionListSerializer(solutions, many=True).data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"detail": "Access denied."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    @swagger_auto_schema(
+        operation_description="Update a solution",
+        request_body=AssignmentSolutionUpdateSerializer,
+        responses={
+            200: AssignmentSolutionUpdateSerializer(),
+            400: "Invalid request or due date passed",
+            403: "Permission denied",
+            404: "Solution not found"
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        course = self.get_course()
+        assignment = self.get_assignment()
         
-    #     return Response({"detail": "You do not have permission to view grades for this course."}, status=403)
-    
-    # def create(self, request, *args, **kwargs):
-    #     return super().create(request, *args, **kwargs)
+        if not self.is_student_registered(course):
+            return Response(
+                {"detail": "Only students can update solutions."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        solution = self.get_student_solution()
+        if not solution:
+            return Response(
+                {"detail": "No solution found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if assignment.due_date < timezone.now().date():
+            return Response(
+                {"detail": "Assignment due date has passed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = AssignmentSolutionUpdateSerializer(
+            solution,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Delete a solution",
+        responses={
+            204: "No content",
+            400: "Due date passed",
+            403: "Permission denied",
+            404: "Solution not found"
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        course = self.get_course()
+        assignment = self.get_assignment()
+
+        if not self.is_student_registered(course):
+            return Response(
+                {"detail": "Only students can delete solutions."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if assignment.due_date < timezone.now().date():
+            return Response(
+                {"detail": "Assignment due date has passed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        solution = self.get_student_solution()
+        if not solution:
+            return Response(
+                {"detail": "No solution found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        solution.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AssignmentGradeListView(CourseAccessMixin, generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating assignment grades
+    """
+    serializer_class = AssignmentGradeListSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsInstructor]
+
+    def get_assignment(self):
+        course = self.get_course()
+        return get_object_or_404(
+            Assignment,
+            course=course,
+            id=self.kwargs['assignment_id']
+        )
+
+    @swagger_auto_schema(
+        operation_description="Get list of grades for an assignment",
+        responses={
+            200: AssignmentGradeListSerializer(many=True),
+            403: "Permission denied"
+        }
+    )
+    def get_queryset(self):
+        if not self.is_course_instructor(self.get_course()):
+            return Grade.objects.none()
+        return Grade.objects.filter(
+            solution__assignment=self.get_assignment()
+        )

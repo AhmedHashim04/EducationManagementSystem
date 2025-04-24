@@ -4,67 +4,73 @@ from course.models import Course
 from django.utils.timezone import now
 from django.shortcuts import get_object_or_404
 
-class CourseAssignmentsSerializer(serializers.ModelSerializer):
+class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        fields = ('title', 'description', 'course', 'due_date', )
-        read_only_fields = ('course','id')
+        fields = ('slug','title', 'description', 'due_date')
 
-class ViewAssignmentsSerializer(serializers.ModelSerializer):
+class CourseAssignmentCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating assignments within a course"""
     class Meta:
         model = Assignment
-        fields = ('title', 'description', 'course', 'due_date')
-        read_only_fields = ('course', 'id')
+        fields = ('slug', 'title', 'description', 'due_date')
+        read_only_fields = ('slug',)
+
+    def create(self, validated_data):
+        course = validated_data.pop('course', None)
+        print(course)
+        if course is None:
+            raise serializers.ValidationError("Course is required to create an assignment")
+        
+        assignment = Assignment.objects.create(course=course, **validated_data)
+        return assignment
 
 
+class AssignmentSolutionSerializer(serializers.ModelSerializer):
+    """Serializer for creating and retrieving individual assignment solutions"""
+    student = serializers.StringRelatedField(read_only=True)
+    assignment = serializers.StringRelatedField(read_only=True)
+    submitted_at = serializers.DateTimeField(read_only=True)
 
+    class Meta:
+        model = Solution
+        fields = ('id', 'student', 'assignment', 'content', 'submitted_at', 'file_attachment')
+        read_only_fields = ('id', 'student', 'assignment', 'submitted_at')
 
-class SolutionSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
+class AssignmentSolutionUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating existing assignment solutions"""
+    class Meta:
+        model = Solution
+        fields = ('content', 'file_attachment')
+
+class StudentSolutionListSerializer(serializers.ModelSerializer):
+    """Serializer for listing all solutions submitted by students"""
+    student_name = serializers.CharField(source='student.get_full_name', read_only=True)
     assignment_title = serializers.CharField(source='assignment.title', read_only=True)
-
+    
     class Meta:
         model = Solution
-        fields = ('id', 'assignment', 'assignment_title', 'student', 'student_name', 'sloution')
-        read_only_fields = ('id', 'assignment_title', 'student_name')
+        fields = ('id', 'student_name', 'assignment_title', 'content', 
+                 'submitted_at', 'file_attachment')
 
-class UpdateSolutionSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Solution
-        fields = ('sloution',)
-        read_only_fields = ('id', 'assignment', 'assignment_title', 'student', 'student_name', )
-
-
-class SudentsSolutionsSerializer(serializers.ModelSerializer):
+class AssignmentGradeListSerializer(serializers.ModelSerializer):
+    """Serializer for listing all grades for assignments"""
+    student_name = serializers.CharField(source='student.get_full_name', read_only=True)
     assignment_title = serializers.CharField(source='assignment.title', read_only=True)
-
-    class Meta:
-        model = Solution
-        fields = ('id', 'assignment', 'assignment_title', 'student', 'sloution')
-        read_only_fields = ('id', 'assignment_title', 'student_name')
-
-
-
-class GradeSerializer(serializers.ModelSerializer):
-    solution_details = serializers.SerializerMethodField()
-    graded_by = serializers.CharField(source='graded_by.get_full_name', read_only=True)
-
+    
     class Meta:
         model = Grade
-        fields = ('id', 'solution', 'solution_details', 'grade', 'comment', 'graded_by', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'solution', 'solution_details', 'graded_by', 'created_at', 'updated_at')
+        fields = ('id', 'student_name', 'assignment_title', 'score', 
+                 'feedback', 'graded_at')
 
-    def get_solution_details(self, obj):
-        return {
-            "assignment_title": obj.solution.assignment.title,
-            "student_name": obj.solution.student.user.get_full_name,
-            "submission_date": obj.solution.created_at
-        }
-
-class GradeStudentSerializer(serializers.ModelSerializer):
-
+class StudentGradeDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed view of a student's grade"""
+    solution_content = serializers.CharField(source='solution.content', read_only=True)
+    assignment_title = serializers.CharField(source='assignment.title', read_only=True)
+    
     class Meta:
         model = Grade
-        fields = ('id', 'solution', 'grade', 'comment', 'created_at', 'updated_at')
-        read_only_fields = ('id','solution', 'created_at', 'updated_at')
+        fields = ('id', 'score', 'feedback', 'graded_at', 'solution_content',
+                 'assignment_title')
+        read_only_fields = ('id', 'graded_at', 'solution_content', 'assignment_title')
+
