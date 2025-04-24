@@ -8,7 +8,6 @@ app_name = 'course'
 urlpatterns = [
     path('',CourseListView.as_view(),name='courseList'),
     path('me/',MyCourseListView.as_view(),name='myCourseList'),
-    # path('me/?code=<str:course_code>',MyCourseListView.as_view(),name='myCourseList'),
     path('me/<str:course_code>/',CourseDetailView.as_view(),name='courseDetails'),
 
 ]

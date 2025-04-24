@@ -116,7 +116,7 @@ class Profile(models.Model):
 
     ROLES = (
         ('instructor','Instructor'),
-        ('assistant','Assistant'),
+        # ('assistant','Assistant'),
         ('student','Student')
     )
 

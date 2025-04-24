@@ -8,12 +8,13 @@ from rest_framework_simplejwt.views import (
 )
 from django.contrib.auth import views
 
-from .views import Register
+from .views import Register, ProfileView
 app_name = 'account'
 
 urlpatterns = [
     path('register/',Register.as_view(),name='register'),
     path('login/',views.LoginView.as_view(template_name='account/login.html'),name='login'),
+    path('profile/', ProfileView.as_view(), name='profile'),
     path('logout/',views.LogoutView.as_view(),name='logout'),
     path('password_change/',views.PasswordChangeView.as_view(),name='password_change'),
     path('password_change/done/',views.PasswordChangeDoneView.as_view(),name='password_change_done'),

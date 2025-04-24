@@ -100,7 +100,7 @@ class AssignmentDetailView(CourseAccessMixin, generics.RetrieveUpdateDestroyAPIV
     """
     API endpoint for retrieving, updating and deleting assignments
     """
-    serializer_class = CourseAssignmentCreateSerializer
+    serializer_class =CourseAssignmentCreateSerializer
     lookup_url_kwarg = 'assignment_slug'
     lookup_field = 'slug'
     authentication_classes = [BasicAuthentication]
@@ -192,7 +192,7 @@ class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
         return get_object_or_404(
             Assignment,
             course=course,
-            id=self.kwargs['assignment_id']
+            slug=self.kwargs['assignment_slug']
         )
 
     def get_student_solution(self):
@@ -375,7 +375,7 @@ class AssignmentGradeListView(CourseAccessMixin, generics.ListCreateAPIView):
         return get_object_or_404(
             Assignment,
             course=course,
-            id=self.kwargs['assignment_id']
+            slug=self.kwargs['assignment_slug']
         )
 
     @swagger_auto_schema(

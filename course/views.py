@@ -8,8 +8,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.authentication import BasicAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .models import Course, CourseRegistration
-from .serializers import CourseListSerializer, CourseDetailSerializer
+from .models import Course, CourseRegistration, CourseMaterial
+from .serializers import CourseListSerializer, CourseDetailSerializer, CourseMaterialSerializer
+
 from django.shortcuts import get_object_or_404
 
 class CourseListView(generics.ListCreateAPIView):
@@ -150,7 +151,7 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseDetailSerializer
     lookup_field = 'code'
-    lookup_url_kwarg = 'courseCode'
+    lookup_url_kwarg = 'course_code'
     authentication_classes = [BasicAuthentication]
     permission_classes = [IsStudent | IsInstructor]
 
@@ -185,7 +186,7 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-        
+
     def retrieve(self, request, *args, **kwargs):
         course = self.get_object()
         
@@ -238,3 +239,66 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
             {'message': 'Student unenrolled successfully'}, 
             status=status.HTTP_200_OK
         )
+class CourseMaterialView(generics.ListCreateAPIView):
+    serializer_class = CourseMaterialSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsStudent | IsInstructor]
+    
+    def get_queryset(self):
+        course_code = self.kwargs.get('course_code')
+        course = get_object_or_404(Course, code=course_code)
+        
+        user_profile = self.request.user.profile
+        
+        # Check if student is enrolled or is the course instructor
+        if user_profile.role == 'student':
+            if not CourseRegistration.objects.filter(
+                student=user_profile, 
+                course=course
+            ).exists():
+                raise PermissionDenied('Only enrolled students can access course materials')
+        elif user_profile.role == 'instructor' and course.instructor != user_profile:
+            raise PermissionDenied('Only course instructor can access course materials')
+            
+        # Return active materials for the course
+        return CourseMaterial.objects.filter(course=course, is_active=True)
+
+    def perform_create(self, serializer):
+        course_code = self.kwargs.get('course_code')
+        course = get_object_or_404(Course, code=course_code)
+        
+        # Verify instructor permissions
+        if self.request.user.profile.role != 'instructor' or course.instructor != self.request.user.profile:
+            raise PermissionDenied('Only course instructor can add materials')
+
+        serializer.save(course=course)
+
+    @swagger_auto_schema(
+        operation_id='list_course_materials',
+        operation_description="Get all materials for a specific course",
+        responses={
+            200: CourseMaterialSerializer(many=True),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+            403: openapi.Response(description="Permission denied"),
+            404: openapi.Response(description="Course not found")
+        },
+        tags=['course-materials']
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_id='create_course_material',
+        operation_description="Add new material to a course",
+        request_body=CourseMaterialSerializer,
+        responses={
+            201: CourseMaterialSerializer,
+            400: openapi.Response(description="Invalid input"),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+            403: openapi.Response(description="Permission denied"),
+            404: openapi.Response(description="Course not found")
+        },
+        tags=['course-materials']
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

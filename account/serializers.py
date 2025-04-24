@@ -18,4 +18,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user._role = role
         return user
-
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    
+    class Meta:
+        model = Profile
+        fields = ['username','email','avatar', 'first_name', 'last_name','role']
+        read_only_fields = ['username', 'email','role']

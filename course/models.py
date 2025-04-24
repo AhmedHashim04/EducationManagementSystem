@@ -9,7 +9,7 @@ class Course(models.Model):
     description = models.TextField(_("Description"))
     credit = models.FloatField(_("Credit"), null=True, blank=True, default=0)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
-    manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
+    # manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
     instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses')
@@ -28,3 +28,18 @@ class CourseRegistration(models.Model):
         student_name = f"{self.student.user.first_name} {self.student.user.last_name}" if self.student and self.student.user else "Unknown"
         return f'{student_name} in {self.course.name}'
 
+class CourseMaterial(models.Model):
+    course = models.ForeignKey(Course, verbose_name=_("Course"), on_delete=models.CASCADE, related_name='materials')
+    title = models.CharField(_("Title"), max_length=100)
+    description = models.TextField(_("Description"), blank=True, null=True)
+    file = models.FileField(_("File"), upload_to='course_materials/')
+    uploaded_at = models.DateTimeField(_("Uploaded At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+    is_active = models.BooleanField(_("Is Active"), default=True)
+
+    def __str__(self):
+        return f"{self.course.code} - {self.title}"
+
+    class Meta:
+        verbose_name = _("Course Material")
+        verbose_name_plural = _("Course Materials")

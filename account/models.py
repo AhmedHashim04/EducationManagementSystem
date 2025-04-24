@@ -23,14 +23,14 @@ class Profile(models.Model):
 
     ROLES = (
         ('instructor','Instructor'),
-        ('assistant','Assistant'),
+        # ('assistant','Assistant'),
         ('student','Student')
     )
 
     user = models.OneToOneField(User, verbose_name=_("User"), on_delete=models.CASCADE,related_name="profile")
 
     role = models.CharField(choices  = ROLES , verbose_name=_("Role"), max_length=50)
-    
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name=_("Avatar"))
 
     def __str__(self):
         return f'Dr {self.user} {self.user.first_name}  {self.user.first_name}' if self.role == 'instructor' \
