@@ -30,9 +30,17 @@ class CourseDetailsSerializer(serializers.ModelSerializer):
 
     def get_instructor_name(self, obj):
         if obj.instructor:
-            return f"{obj.instructor.first_name} {obj.instructor.last_name}"
+            return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
         return "Unknown"
 
+    def get_manager_name(self, obj):
+        """
+        Get full name of course manager.
+        Returns manager's full name or 'Unknown' if no manager assigned.
+        """
+        if not obj.manager:
+            return "Unknown"
+        return f"{obj.manager.user.first_name} {obj.manager.user.last_name}".strip()
 
 
 
@@ -54,12 +62,11 @@ class CourseDetailsSerializer(serializers.ModelSerializer):
 #         if not obj.instructor:
 #             return "Unknown"
 #         return f"{obj.instructor.first_name} {obj.instructor.last_name}".strip()
-
-#     def get_manager_name(self, obj):
-#         """
-#         Get full name of course manager.
-#         Returns manager's full name or 'Unknown' if no manager assigned.
-#         """
-#         if not obj.manager:
-#             return "Unknown"
-#         return f"{obj.manager.first_name} {obj.manager.last_name}".strip()
+    # def get_manager_name(self, obj):
+    #     """
+    #     Get full name of course manager.
+    #     Returns manager's full name or 'Unknown' if no manager assigned.
+    #     """
+    #     if not obj.manager:
+    #         return "Unknown"
+    #     return f"{obj.manager.first_name} {obj.manager.last_name}".strip()

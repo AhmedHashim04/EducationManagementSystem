@@ -3,6 +3,7 @@ from rest_framework import generics
 from .serializers import CourseAssignmentsSerializer , ViewAssignmentsSerializer ,SolutionSerializer ,GradeSerializer ,UpdateSolutionSerializer , SudentsSolutionsSerializer
 from account.permessions import  IsStudent, IsInstructor 
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from datetime import timedelta
 from django.utils import timezone
@@ -13,7 +14,8 @@ from account.models import Profile
 
 class CreatAssignment(generics.ListCreateAPIView):
     serializer_class = ViewAssignmentsSerializer
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [BasicAuthentication]
     permission_classes = [ IsInstructor | IsStudent ]
     def is_student_registered(self, course):
         """Check if the current user is a student registered in the course."""
@@ -61,7 +63,8 @@ class CreatAssignment(generics.ListCreateAPIView):
 class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseAssignmentsSerializer
     lookup_url_kwarg = 'assignment_id'
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [BasicAuthentication]
     permission_classes = [ IsInstructor | IsStudent ]
 
     def is_student_registered(self, course):
@@ -111,7 +114,8 @@ class SolveAssignment(generics.CreateAPIView,
         
     serializer_class = SolutionSerializer
     lookup_field = 'assignment_id'
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [BasicAuthentication]
     permission_classes = [ IsInstructor | IsStudent ]
         
 
@@ -239,7 +243,8 @@ class SolveAssignment(generics.CreateAPIView,
 class GradeListView(generics.ListCreateAPIView):
     serializer_class = GradeSerializer
     queryset = Grade.objects.all()
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [BasicAuthentication]
     permission_classes = [IsInstructor]
     def is_the_real_instructor(self, course):
         """Check if the current user is the instructor of the course."""

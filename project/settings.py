@@ -49,12 +49,14 @@ INSTALLED_APPS = [
     # 'chat',
 ]
 
+
+
 REST_FRAMEWORK = {
 # BasicAuthentication // SessionAuthentication // TokenAuthentication
     
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-    ], 
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 
 # AllowAny // IsAuthenticated // IsAdminUser // IsAuthenticatedOrReadOnly
 
@@ -71,6 +73,16 @@ REST_FRAMEWORK = {
 #     ],
 # }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer <your_token>"',
+        }
+    }
+}
 
 
 MIDDLEWARE = [
