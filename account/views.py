@@ -1,24 +1,21 @@
 
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from django.contrib.auth.models import User
 from .serializers import RegisterSerializer
 from .models import Profile
-from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication
 from .serializers import ProfileSerializer
-from rest_framework import serializers
-from .models import Profile
-from django.urls import path
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 class Register(CreateAPIView):
     model = User
     serializer_class = RegisterSerializer
+    
 
-    def perform_create(self, serializer):
-        user = serializer.save()
-        return user
 class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     authentication_classes = [BasicAuthentication]
@@ -39,3 +36,20 @@ class ProfileView(RetrieveUpdateAPIView):
         instance.save()
 
         return Response(serializer.data)
+
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        if not user.check_password(old_password):
+            return Response({"detail": "Old password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Password changed successfully"}, status=status.HTTP_200_OK)

@@ -1,8 +1,5 @@
 from rest_framework.permissions import BasePermission
 
-
-
-
 class IsStudent(BasePermission):
     """
     Allows access only to authenticated student users.
