@@ -10,11 +10,8 @@ class Course(models.Model):
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
-    instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses')
-    registration_start_at = models.DateTimeField(_("Registration Start At"), null=True, blank=True)
+    instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses', limit_choices_to={'role': 'instructor'})
     registration_end_at = models.DateTimeField(_("Registration End At"), null=True, blank=True)
-    
-    # manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
 
     def __str__(self):
         instructor_name = f"{self.instructor.user.first_name} {self.instructor.user.last_name}" if self.instructor and self.instructor.user else "Unknown"
