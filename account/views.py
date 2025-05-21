@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from account.custom_jwt import CustomJWTAuthentication
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .serializers import ProfileSerializer, RegisterSerializer, ChangePasswordSerializer
@@ -16,7 +16,7 @@ class RegisterAPIView(CreateAPIView):
 
 class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CustomJWTAuthentication]
     permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     def get_object(self):
@@ -34,11 +34,12 @@ class ProfileView(RetrieveUpdateAPIView):
         instance.save()
 
         return Response(serializer.data)
+
 class ChangePasswordView(APIView):
     """
     API endpoint for changing the user's password.
     """
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CustomJWTAuthentication]
     permission_classes = [IsStudent | IsInstructor | IsAssistant]
     serializer_class = ChangePasswordSerializer
 

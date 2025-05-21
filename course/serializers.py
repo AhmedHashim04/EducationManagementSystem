@@ -6,12 +6,13 @@ from assignment.models import Assignment
 
 class CourseListSerializer(serializers.ModelSerializer):
     instructor_name = serializers.SerializerMethodField()
+    assistants = serializers.SerializerMethodField()
     class Meta:
         model = Course
         fields = ['code', 'name','instructor_name','is_active','assistants', 'registration_start_at', 'registration_end_at']
     
     def get_assistants(self, obj):
-        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant', flat=True)
+        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant__user__username', flat=True)
         if assistants:
             return assistants
         return "No Assistants"
@@ -21,6 +22,7 @@ class CourseListSerializer(serializers.ModelSerializer):
         return "Unknown"
 
 class CourseDetailSerializer(serializers.ModelSerializer):
+    materials = serializers.SerializerMethodField()
     assignments = serializers.SerializerMethodField()
     assistants = serializers.SerializerMethodField()
     instructor_name = serializers.SerializerMethodField()
@@ -38,10 +40,10 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
         fields = [
             'name', 'code', 'description', 'created_at', #'manager_name',
-            'updated_at', 'is_active', 'instructor_name', 'assistants', 'assignments', 'registration_start_at', 'registration_end_at' 
+            'updated_at', 'is_active', 'instructor_name', 'assistants', 'materials', 'assignments', 'registration_start_at', 'registration_end_at' 
         ]
     def get_assistants(self, obj):
-        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant', flat=True)
+        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant__user__username', flat=True)
         if assistants:
             return assistants
         return "No Assistants"
@@ -56,6 +58,11 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
         return "Unknown"
 
+    def get_materials(self, obj):
+        materials = CourseMaterial.objects.filter(course=obj).values_list('title', flat=True)
+        if materials:
+            return materials
+        return "No Materials"
 class CourseMaterialSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     course_code = serializers.CharField(source='course.code', read_only=True)

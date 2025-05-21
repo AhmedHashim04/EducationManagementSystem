@@ -48,32 +48,36 @@ INSTALLED_APPS = [
     'chat',
 ]
 
-
+from datetime import timedelta
 SIMPLE_JWT = {
-    'UPDATE_LAST_LOGIN': True, 
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=10),  # 👈 بدل 5 دقائق خليه 10 أيام مثلًا
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+
+    # باقي الإعدادات الافتراضية (اختياري):
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
 
-REST_FRAMEWORK = {
 # BasicAuthentication // SessionAuthentication // TokenAuthentication
-    
+REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'account.custom_jwt.CustomJWTAuthentication', 
     ],
 
+}
 # AllowAny // IsAuthenticated // IsAdminUser // IsAuthenticatedOrReadOnly
 
     # 'DEFAULT_PERMISSION_CLASSES': [ 
     #     'rest_framework.permissions.IsAuthenticated',
     # ],
 
-}
 
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ],
-# }
+
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {

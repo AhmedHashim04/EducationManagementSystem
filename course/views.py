@@ -38,16 +38,16 @@ class AllCourseListView(generics.ListCreateAPIView):
         return Course.objects.none()
     
 
-    def _get_course_and_validate(self, course_code, check_exists=False):
+    def _get_course_and_validate(self, course_code):
+
         course = get_object_or_404(Course, code=course_code)
         student = self.request.user.profile
         self._validate_student(student)
         
         registration_exists = CourseRegistration.objects.filter(student=student, course=course).exists()
 
-        if check_exists and not registration_exists:
-            raise PermissionDenied('Student is not enrolled in this course')
-        elif not check_exists and registration_exists:
+
+        if registration_exists:
             raise PermissionDenied('Student already enrolled in this course')
         return course, student
     
@@ -107,6 +107,11 @@ class AllCourseListView(generics.ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         course_code = request.data.get('code')
+        if not course_code:
+            return Response(
+                {'error': 'Course code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         course, student = self._get_course_and_validate(course_code)
 
         if not course.is_active:
@@ -118,7 +123,6 @@ class AllCourseListView(generics.ListCreateAPIView):
         CourseRegistration.objects.create(
             student=student, 
             course=course, 
-            status='accepted'
         )
         return Response(
             {'message': 'Student enrolled successfully'}, 
@@ -152,6 +156,8 @@ class MyCourseListView(generics.ListAPIView):
             return Course.objects.filter(registrations__student=user_profile)
         elif user_profile.role == 'instructor':
             return Course.objects.filter(instructor=user_profile)
+        elif user_profile.role == 'assistant':
+            return Course.objects.filter(assistant=user_profile)
         return Course.objects.none()
 
 class CourseDetailView(generics.RetrieveDestroyAPIView):
@@ -261,6 +267,11 @@ class CourseMaterialView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         course_code = self.kwargs.get('course_code')
+        if not course_code:
+            return Response(
+                {'error': 'Course code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         course = get_object_or_404(Course, code=course_code)
         
         user_profile = self.request.user.profile
@@ -280,6 +291,11 @@ class CourseMaterialView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         course_code = self.kwargs.get('course_code')
+        if not course_code:
+            return Response(
+                {'error': 'Course code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         course = get_object_or_404(Course, code=course_code)
         
         # Verify instructor permissions
@@ -339,6 +355,11 @@ class CourseAssistantPermessionView(generics.ListAPIView, generics.UpdateAPIView
         Return a list of all assistants for the course.
         """
         course_code = self.kwargs.get('course_code')
+        if not course_code:
+            return Response(
+                {'error': 'Course code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         course = get_object_or_404(Course, code=course_code)
         course_assistant = CourseAssistant.objects.filter(course=course)
         return course_assistant
@@ -348,6 +369,11 @@ class CourseAssistantPermessionView(generics.ListAPIView, generics.UpdateAPIView
         Return the requested assistant object.
         """
         course_code = self.kwargs.get('course_code')
+        if not course_code:
+            return Response(
+                {'error': 'Course code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         course = get_object_or_404(Course, code=course_code)
         assistant = self.kwargs.get('assistant')
         course_assistant = get_object_or_404(CourseAssistant, course=course, assistant=assistant)
