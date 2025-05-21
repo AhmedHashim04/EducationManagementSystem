@@ -31,6 +31,25 @@
 
 ---
 
+## 🔮 Upcoming Features
+
+- ✅ Attendance System (track student presence and generate reports)
+- 🗓️ Timetable & Scheduling (with notifications and reminders)
+- 🎥 Enhanced Course Materials (support for videos, PDFs, and slides)
+- 📊 Student Dashboard & Analytics (progress tracking and insights)
+- 🧪 Quizzes & Exams System (multiple question types with auto-grading)
+- 📈 Gradebook & Transcripts (GPA calculation and exportable transcripts)
+- 📁 Advanced Assignment Submission (multi-file, resubmission, feedback)
+- 🌐 Multi-language Support (English/Arabic with i18n)
+- 🔐 Role-Based Permissions (fine-grained access control)
+- 🎓 Certificate Generator (auto-generated course completion certificates)
+- 📬 Email & In-App Notifications (for assignments, messages, updates)
+- 🔎 Search & Filter System (courses, messages, assignments)
+- 🧑‍💼 Feedback & Rating System (students rate courses and instructors)
+- 🤖 AI-Powered Features (recommendations and plagiarism detection)
+---
+
+
 ## 🛠️ Tech Stack  
 
 - **Backend:** Django + Django REST Framework (DRF)  
@@ -157,5 +176,6 @@ python manage.py runserver
 ---
 
 ## 📜 License  
-This project is open-source under the **MIT License**.  
+This project is open-source under the **MIT License**.
+---
 
