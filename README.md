@@ -138,35 +138,46 @@ python manage.py runserver
 ## 📢 API Endpoints  
 
 ### 👤 Authentication  
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/auth/register/` | Register a new user |
-| `POST` | `/api/auth/login/` | Authenticate and obtain a token |
-| `POST` | `/api/auth/logout/` | Log out the user |
-| `POST` | `/api/auth/forgot-password/` | Request password reset |
+| `POST` | `/api/account/register/` | Register a new user |
+| `POST` | `/api/account/token/` | Obtain a JWT token |
+| `POST` | `/api/account/token/refresh/` | Refresh a JWT token |
+| `POST` | `/api/account/token/verify/` | Verify a JWT token |
+| `POST` | `/api/account/password-reset/` | Request a password reset |
+| `POST` | `/api/account/password_change/` | Change the user's password |
+| `GET`  | `/api/account/profile/` | Retrieve the user's profile |
 
 ### 📚 Courses  
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET`  | `/api/courses/` | List all courses |
-| `POST` | `/api/courses/` | Create a new course (Admin only) |
-| `POST` | `/api/courses/enroll/` | Enroll a student in a course |
-| `POST` | `/api/courses/leave/` | Withdraw a student from a course |
+| `GET`  | `/api/courses/me/` | List courses the user is enrolled in |
+| `GET`  | `/api/courses/me/{course_code}/` | Retrieve details of a specific course |
+| `POST` | `/api/courses/me/{course_code}/permession/` | Assign assistant permissions (Admin only) |
+| `GET`  | `/api/courses/me/{course_code}/materials/` | Retrieve course materials |
 
 ### 📝 Assignments  
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET`  | `/api/assignments/` | List all assignments |
-| `POST` | `/api/assignments/` | Create a new assignment (Instructor only) |
-| `POST` | `/api/assignments/submit/` | Submit an assignment (Student only) |
-| `POST` | `/api/assignments/grade/` | Grade an assignment (Instructor only) |
+| `GET`  | `/api/courses/me/{course_code}/assignments/` | List all assignments for a course |
+| `POST` | `/api/courses/me/{course_code}/assignments/` | Create a new assignment (Instructor only) |
+| `GET`  | `/api/courses/me/{course_code}/assignments/{assignment_slug}/` | Retrieve details of a specific assignment |
+| `POST` | `/api/courses/me/{course_code}/assignments/{assignment_slug}/solution/` | Submit a solution for an assignment (Student only) |
+| `POST` | `/api/courses/me/{course_code}/assignments/{assignment_slug}/solution/{solution_id}/grade/` | Grade a submitted solution (Instructor only) |
 
 ### 💬 Chat System  
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET`  | `/api/chat/conversations/` | Get all conversations for a user |
-| `POST` | `/api/chat/message/` | Send a message |
-| `GET`  | `/api/chat/messages/{conversation_id}/` | Retrieve messages in a conversation |
+| `GET`  | `/api/chat/` | List all chats for the user |
+| `POST` | `/api/chat/` | Create a new chat |
+| `GET`  | `/api/chat/{id}/` | Retrieve details of a specific chat |
+| `GET`  | `/api/chat/{chat_id}/messages/` | List all messages in a chat |
+| `POST` | `/api/chat/{chat_id}/messages/` | Send a message in a chat |
 
 ---
 
