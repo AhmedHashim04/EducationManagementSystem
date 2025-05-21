@@ -11,6 +11,7 @@ class Course(models.Model):
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
     instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses', limit_choices_to={'role': 'instructor'})
+    registration_start_at = models.DateTimeField(_("Registration Start At"), null=True, blank=True)
     registration_end_at = models.DateTimeField(_("Registration End At"), null=True, blank=True)
 
     def __str__(self):

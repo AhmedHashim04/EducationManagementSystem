@@ -57,7 +57,7 @@ class Grade(models.Model):
 
     def __str__(self):
         student_name = f"{self.solution.student.user.first_name} {self.solution.student.user.last_name}" if self.solution.student and self.solution.student.user else "Unknown"
-        return f'{student_name} - {self.solution.assignment.title} - {self.grade}'
+        return f'{student_name} - {self.solution.assignment.title} - {self.score}'
 
     def get_student_name(self):
         if self.solution.student and self.solution.student.user:
