@@ -25,11 +25,11 @@ schema_view = get_schema_view(
 urlpatterns = [
 
    path('admin/', admin.site.urls),
-   path('account/', include('account.urls', namespace='account')),
-   path('courses/', include('course.urls', namespace='course')),
-   path('courses/me/', include('assignment.urls', namespace='assignment')),
-   path('chat/', include('chat.urls', namespace='chat')),  
    path('api/', include('rest_framework.urls', namespace='rest_framework')),
+   path('api/account/', include('account.urls', namespace='account')),
+   path('api/courses/', include('course.urls', namespace='course')),
+   path('api/courses/me/', include('assignment.urls', namespace='assignment')),
+   path('api/chat/', include('chat.urls', namespace='chat')),  
 
    path('swagger<format>', schema_view.without_ui(cache_timeout=0), name='schema-json'),
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

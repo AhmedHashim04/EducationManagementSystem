@@ -5,6 +5,7 @@ from assignment.models import Assignment
 
 
 class CourseListSerializer(serializers.ModelSerializer):
+    instructor_name = serializers.SerializerMethodField()
     class Meta:
         model = Course
         fields = ['code', 'name','instructor_name','is_active','assistants', 'registration_start_at', 'registration_end_at']
@@ -20,6 +21,9 @@ class CourseListSerializer(serializers.ModelSerializer):
         return "Unknown"
 
 class CourseDetailSerializer(serializers.ModelSerializer):
+    assignments = serializers.SerializerMethodField()
+    assistants = serializers.SerializerMethodField()
+    instructor_name = serializers.SerializerMethodField()
     registration_start_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
     registration_end_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
 
@@ -34,7 +38,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
         fields = [
             'name', 'code', 'description', 'created_at', #'manager_name',
-            'updated_at', 'is_active', 'instructor_name', 'assignments', 'registration_start_at', 'registration_end_at'  # Fixed typo in 'assignments'
+            'updated_at', 'is_active', 'instructor_name', 'assistants', 'assignments', 'registration_start_at', 'registration_end_at' 
         ]
     def get_assistants(self, obj):
         assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant', flat=True)
@@ -76,3 +80,8 @@ class CourseMaterialSerializer(serializers.ModelSerializer):
         if obj.file and hasattr(obj.file, 'url') and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+    
+class CourseAssistantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseAssistant
+        fields = ['assistant']

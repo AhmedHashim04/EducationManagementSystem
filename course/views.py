@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import Course, CourseRegistration, CourseMaterial, CourseAssistant
-from .serializers import CourseListSerializer, CourseDetailSerializer, CourseMaterialSerializer
+from .serializers import CourseListSerializer, CourseDetailSerializer, CourseMaterialSerializer, CourseAssistantSerializer
 
 from django.shortcuts import get_object_or_404
 
@@ -330,6 +330,7 @@ class CourseAssistantPermessionView(generics.ListAPIView, generics.UpdateAPIView
     The view is only accessible to instructors of the course.
     """
     model = CourseAssistant
+    serializer_class = CourseAssistantSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsInstructor]
 
