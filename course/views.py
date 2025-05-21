@@ -234,22 +234,26 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         course = self.get_object()
         student = request.user.profile
-    
-        if student.role != 'student':
+
+        if self.is_instructor(course) or self.is_assistant(course):
             raise PermissionDenied('Only students can unenroll from courses')
 
-        deleted, _ = CourseRegistration.objects.filter(
+        if course.registration_end_at and course.registration_end_at < timezone.now():
+            return Response(
+                {'error': 'Cannot unenroll from a course after the registration period has ended'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        CourseRegistration.objects.filter(
             student=student,
             course=course
         ).delete()
-
-        if not deleted:
-            raise PermissionDenied('Student is not enrolled in this course')
 
         return Response(
             {'message': 'Student unenrolled successfully'}, 
             status=status.HTTP_200_OK
         )
+
 class CourseMaterialView(generics.ListCreateAPIView):
     serializer_class = CourseMaterialSerializer
     authentication_classes = [JWTAuthentication]
@@ -279,7 +283,12 @@ class CourseMaterialView(generics.ListCreateAPIView):
         course = get_object_or_404(Course, code=course_code)
         
         # Verify instructor permissions
-        if self.request.user.profile.role != 'instructor' or course.instructor != self.request.user.profile:
+        user_profile = self.request.user.profile
+        if user_profile.role == 'assistant':
+            course_assistant = get_object_or_404(CourseAssistant, course=course, assistant=user_profile)
+            if not course_assistant.permession:
+                raise PermissionDenied('You do not have permission to add materials, contact course instructor to get permission')
+        elif user_profile.role != 'instructor' or course.instructor != user_profile:
             raise PermissionDenied('Only course instructor can add materials')
 
         serializer.save(course=course)
@@ -313,18 +322,30 @@ class CourseMaterialView(generics.ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-class GivePermessionView(generics.ListAPIView, generics.UpdateAPIView):
+
+class CourseAssistantPermessionView(generics.ListAPIView, generics.UpdateAPIView):
+    """
+    View for listing all assistants for a course and giving/revokeing permissions to them.
+
+    The view is only accessible to instructors of the course.
+    """
     model = CourseAssistant
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsInstructor]
 
     def get_queryset(self):
+        """
+        Return a list of all assistants for the course.
+        """
         course_code = self.kwargs.get('course_code')
         course = get_object_or_404(Course, code=course_code)
         course_assistant = CourseAssistant.objects.filter(course=course)
         return course_assistant
 
     def get_object(self):
+        """
+        Return the requested assistant object.
+        """
         course_code = self.kwargs.get('course_code')
         course = get_object_or_404(Course, code=course_code)
         assistant = self.kwargs.get('assistant')
@@ -335,6 +356,25 @@ class GivePermessionView(generics.ListAPIView, generics.UpdateAPIView):
             raise PermissionDenied('Only course instructor can give permissions or remove permissions')
         return course_assistant
 
+    @swagger_auto_schema(
+        operation_id='toggle_permession',
+        operation_description="Toggle permission for an assistant",
+        responses={
+            200: openapi.Response(
+                description="Successfully toggled permission",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            ),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+            403: openapi.Response(description="Permission denied"),
+            404: openapi.Response(description="Course or assistant not found")
+        },
+        tags=['course-assistants']
+    )
     def update(self, request, *args, **kwargs):
         course_assistant = self.get_object()
         course_assistant.permession = not course_assistant.permession

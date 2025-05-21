@@ -19,7 +19,6 @@ class CourseListSerializer(serializers.ModelSerializer):
             return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
         return "Unknown"
 
-
 class CourseDetailSerializer(serializers.ModelSerializer):
     registration_start_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
     registration_end_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
@@ -52,7 +51,6 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if obj.instructor:
             return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
         return "Unknown"
-
 
 class CourseMaterialSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
