@@ -1,53 +1,59 @@
 from django.core.exceptions import PermissionDenied
-from django.views.generic import DeleteView
 from rest_framework import generics, status
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from account.permessions import IsStudent, IsInstructor 
+from account.permessions import IsStudent, IsInstructor, IsAssistant
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import BasicAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .models import Course, CourseRegistration, CourseMaterial
+from .models import Course, CourseRegistration, CourseMaterial, CourseAssistant
 from .serializers import CourseListSerializer, CourseDetailSerializer, CourseMaterialSerializer
 
 from django.shortcuts import get_object_or_404
 
-class CourseListView(generics.ListCreateAPIView):
+class AllCourseListView(generics.ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseListSerializer
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsStudent | IsInstructor]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     def get_queryset(self):
-        user_profile = getattr(self.request.user, 'profile', None)
+        """
+        Return a list of all courses that the current user is not enrolled in.
+        
+        If the current user is a student, return all courses that the student is not enrolled in.
+        If the current user is an instructor, return all courses that the instructor does not lead.
+        If the current user is an assistant, return all courses that the assistant does not assist.
+        If the current user is not logged in, return an empty list.
+        """
+        user_profile = self.request.user.profile
+
         if user_profile:
             if user_profile.role == 'student':
                 return Course.objects.exclude(registrations__student=user_profile)
             elif user_profile.role == 'instructor':
                 return Course.objects.exclude(instructor=user_profile)
-        return Course.objects.all()
+            elif user_profile.role == 'assistant':
+                return Course.objects.exclude(assistant=user_profile)
 
-    def _validate_student_enrollment(self, student, course):
-        if student.role != 'student':
-            raise PermissionDenied('Only students can enroll/unenroll in courses')
+        return Course.objects.none()
+    
 
     def _get_course_and_validate(self, course_code, check_exists=False):
         course = get_object_or_404(Course, code=course_code)
         student = self.request.user.profile
-        self._validate_student_enrollment(student, course)
+        self._validate_student(student)
         
-        registration_exists = CourseRegistration.objects.filter(
-            student=student, 
-            course=course
-        ).exists()
+        registration_exists = CourseRegistration.objects.filter(student=student, course=course).exists()
 
         if check_exists and not registration_exists:
             raise PermissionDenied('Student is not enrolled in this course')
         elif not check_exists and registration_exists:
             raise PermissionDenied('Student already enrolled in this course')
-
         return course, student
+    
+    def _validate_student(self, student):
+        if student.role != 'student':
+            raise PermissionDenied('Only students can enroll/unenroll in courses')
 
     @swagger_auto_schema(
         operation_id='list_unenrolled_courses',
@@ -122,8 +128,8 @@ class CourseListView(generics.ListCreateAPIView):
 class MyCourseListView(generics.ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseListSerializer
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsStudent | IsInstructor]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     @swagger_auto_schema(operation_id='list_enrolled_courses',operation_description="Returns a list of courses associated with the authenticated user",
     responses={200: openapi.Response
@@ -139,8 +145,9 @@ class MyCourseListView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+
     def get_queryset(self):
-        user_profile = getattr(self.request.user, 'profile', None)
+        user_profile = self.request.user.profile
         if user_profile.role == 'student':
             return Course.objects.filter(registrations__student=user_profile)
         elif user_profile.role == 'instructor':
@@ -152,8 +159,8 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = CourseDetailSerializer
     lookup_field = 'code'
     lookup_url_kwarg = 'course_code'
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsStudent | IsInstructor]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     def is_enrolled(self, course):
         student_id = self.request.user.profile
@@ -162,6 +169,10 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     def is_instructor(self, course):
         instructor_id = self.request.user.profile
         return instructor_id == course.instructor
+
+    def is_assistant(self, course):
+        assistant_id = self.request.user.profile
+        return assistant_id == course.assistant
 
     @swagger_auto_schema(operation_id='get_course_details',operation_description="Retrieve details of a specific course",
         responses={
@@ -190,9 +201,9 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         course = self.get_object()
         
-        if not (self.is_enrolled(course) or self.is_instructor(course)):
+        if not (self.is_enrolled(course) or self.is_instructor(course) or self.is_assistant(course)):
             return Response(
-                {'error': 'Only students/instructor in course can view course details'},
+                {'error': 'Only students/instructor/assistant in course can view course details'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -241,8 +252,8 @@ class CourseDetailView(generics.RetrieveDestroyAPIView):
         )
 class CourseMaterialView(generics.ListCreateAPIView):
     serializer_class = CourseMaterialSerializer
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsStudent | IsInstructor]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
     
     def get_queryset(self):
         course_code = self.kwargs.get('course_code')
@@ -302,3 +313,32 @@ class CourseMaterialView(generics.ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+class GivePermessionView(generics.ListAPIView, generics.UpdateAPIView):
+    model = CourseAssistant
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsInstructor]
+
+    def get_queryset(self):
+        course_code = self.kwargs.get('course_code')
+        course = get_object_or_404(Course, code=course_code)
+        course_assistant = CourseAssistant.objects.filter(course=course)
+        return course_assistant
+
+    def get_object(self):
+        course_code = self.kwargs.get('course_code')
+        course = get_object_or_404(Course, code=course_code)
+        assistant = self.kwargs.get('assistant')
+        course_assistant = get_object_or_404(CourseAssistant, course=course, assistant=assistant)
+        
+        # Verify instructor permissions
+        if self.request.user.profile.role != 'instructor' or course.instructor != self.request.user.profile:
+            raise PermissionDenied('Only course instructor can give permissions or remove permissions')
+        return course_assistant
+
+    def update(self, request, *args, **kwargs):
+        course_assistant = self.get_object()
+        course_assistant.permession = not course_assistant.permession
+        course_assistant.save()
+        return Response({'message': 'Permission updated successfully'}, status=status.HTTP_200_OK)
+    
+

@@ -18,5 +18,13 @@ class IsInstructor(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated \
                     and request.user.profile.role == 'instructor' )
+    
+class IsAssistant(BasePermission):
+    """
+    Allows access only to authenticated assistant users.
+    """
 
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated \
+                    and request.user.profile.role == 'assistant' )
 

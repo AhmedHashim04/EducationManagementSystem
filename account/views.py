@@ -1,15 +1,16 @@
 
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
-from django.contrib.auth.models import User
-from .serializers import RegisterSerializer
-from .models import Profile
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import BasicAuthentication
-from .serializers import ProfileSerializer
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from account.permessions import IsStudent, IsInstructor, IsAssistant
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from django.contrib.auth.models import User
+
+from .serializers import ProfileSerializer, RegisterSerializer
 
 class Register(CreateAPIView):
     model = User
@@ -18,8 +19,8 @@ class Register(CreateAPIView):
 
 class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     def get_object(self):
         return self.request.user.profile
@@ -37,10 +38,9 @@ class ProfileView(RetrieveUpdateAPIView):
 
         return Response(serializer.data)
 
-
-
 class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsStudent | IsInstructor | IsAssistant]
 
     def post(self, request):
         user = request.user

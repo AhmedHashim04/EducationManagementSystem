@@ -7,12 +7,14 @@ class Course(models.Model):
     code = models.CharField(_("Code"), max_length=50,unique=True)
     name = models.CharField(_("Name"), max_length=50)
     description = models.TextField(_("Description"))
-    credit = models.FloatField(_("Credit"), null=True, blank=True, default=0)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
-    # manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
     instructor = models.ForeignKey(Profile, verbose_name=_("Instructor"), on_delete=models.CASCADE, related_name='courses')
+    registration_start_at = models.DateTimeField(_("Registration Start At"), null=True, blank=True)
+    registration_end_at = models.DateTimeField(_("Registration End At"), null=True, blank=True)
+    
+    # manager = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='managed_courses')
 
     def __str__(self):
         instructor_name = f"{self.instructor.user.first_name} {self.instructor.user.last_name}" if self.instructor and self.instructor.user else "Unknown"
@@ -21,11 +23,21 @@ class Course(models.Model):
 class CourseRegistration(models.Model):
     student = models.ForeignKey(Profile, verbose_name=_("Student"), on_delete=models.CASCADE, limit_choices_to={'role': 'student'}, related_name='registrations')
     course = models.ForeignKey(Course, verbose_name=_("Course"), on_delete=models.CASCADE, related_name='registrations')
-    status = models.CharField(max_length=10, default='pending', choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')])
     register_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         student_name = f"{self.student.user.first_name} {self.student.user.last_name}" if self.student and self.student.user else "Unknown"
+        return f'{student_name} in {self.course.name}'
+
+class CourseAssistant(models.Model):
+    course = models.ForeignKey(Course, verbose_name=_("Course"), on_delete=models.CASCADE, related_name='assistants')
+    assistant = models.ForeignKey(Profile, verbose_name=_("Assistant"), on_delete=models.CASCADE, limit_choices_to={'role': 'assistant'}, related_name='assistants')
+    register_at = models.DateTimeField(auto_now_add=True)
+    permession = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        student_name = f"{self.assistant.user.first_name} {self.assistant.user.last_name}" if self.assistant and self.assistant.user else "Unknown"
         return f'{student_name} in {self.course.name}'
 
 class CourseMaterial(models.Model):

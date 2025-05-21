@@ -1,27 +1,47 @@
 from rest_framework import serializers
-from .models import Course, CourseMaterial
+from .models import Course, CourseMaterial, CourseAssistant
 from assignment.models import Assignment
+
+
 
 class CourseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['code', 'name']
+        fields = ['code', 'name','instructor_name','is_active','assistants', 'registration_start_at', 'registration_end_at']
+    
+    def get_assistants(self, obj):
+        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant', flat=True)
+        if assistants:
+            return assistants
+        return "No Assistants"
+    def get_instructor_name(self, obj):
+        if obj.instructor:
+            return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
+        return "Unknown"
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    # manager_name = serializers.SerializerMethodField()
-    instructor_name = serializers.SerializerMethodField()
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    assignments = serializers.SerializerMethodField()
+    registration_start_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
+    registration_end_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", allow_null=True, required=False)
+
+    def validate(self, data):
+        if data['registration_start_at'] and data['registration_end_at']:
+            if data['registration_start_at'] >= data['registration_end_at']:
+                raise serializers.ValidationError({'registration_end_at': 'End date should be after start date'})
+        return data
 
     class Meta:
         model = Course
 
         fields = [
-            'name', 'code', 'description', 'credit', 'created_at', #'manager_name',
-            'updated_at', 'is_active', 'instructor_name', 'assignments'  # Fixed typo in 'assignments'
+            'name', 'code', 'description', 'created_at', #'manager_name',
+            'updated_at', 'is_active', 'instructor_name', 'assignments', 'registration_start_at', 'registration_end_at'  # Fixed typo in 'assignments'
         ]
+    def get_assistants(self, obj):
+        assistants = CourseAssistant.objects.filter(course=obj).values_list('assistant', flat=True)
+        if assistants:
+            return assistants
+        return "No Assistants"
     def get_assignments(self, obj):
         assignments =Assignment.objects.filter(course=obj).values_list('title', flat=True)
         if assignments:
@@ -32,16 +52,6 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if obj.instructor:
             return f"{obj.instructor.user.first_name} {obj.instructor.user.last_name}"
         return "Unknown"
-
-    # def get_manager_name(self, obj):
-    #     """
-    #     Get full name of course manager.
-    #     Returns manager's full name or 'Unknown' if no manager assigned.
-    #     """
-    #     if not obj.manager:
-    #         return "Unknown"
-    #     return f"{obj.manager.user.first_name} {obj.manager.user.last_name}".strip()
-
 
 
 class CourseMaterialSerializer(serializers.ModelSerializer):
