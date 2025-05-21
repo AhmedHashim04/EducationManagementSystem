@@ -8,6 +8,8 @@ class Chat(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f'Chat between :{self.participants.first().username} - {self.participants.last().username}'
     class Meta:
         ordering = ['-updated_at']
 
@@ -18,5 +20,7 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'{self.sender.username} - {self.created_at} : {self.content}'
     class Meta:
         ordering = ['created_at']
