@@ -6,7 +6,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
 
 class Assignment(models.Model):
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=255, blank=False, null=False,unique=True,)
     is_active = models.BooleanField(default=True)

@@ -31,7 +31,7 @@ class CourseRegistration(models.Model):
 
 class CourseAssistant(models.Model):
     course = models.ForeignKey(Course, verbose_name=_("Course"), on_delete=models.CASCADE, related_name='assistants')
-    assistant = models.ForeignKey(Profile, verbose_name=_("Assistant"), on_delete=models.CASCADE, limit_choices_to={'role': 'assistant'}, related_name='courses')
+    assistant = models.ForeignKey(Profile, verbose_name=_("Assistant"), on_delete=models.CASCADE, limit_choices_to={'role': 'assistant'}, related_name='assistant_courses')
     register_at = models.DateTimeField(auto_now_add=True)
     permession = models.BooleanField(default=False)
 

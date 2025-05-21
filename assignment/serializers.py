@@ -51,7 +51,7 @@ class StudentSolutionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solution
         fields = ('id', 'student_name', 'assignment_title', 'content', 
-                 'submitted_at', 'file_attachment')
+                'submitted_at', 'file_attachment')
 
 class AssignmentGradeListSerializer(serializers.ModelSerializer):
     """Serializer for listing all grades for assignments"""
@@ -61,7 +61,7 @@ class AssignmentGradeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
         fields = ('id', 'student_name', 'assignment_title', 'score', 
-                 'feedback', 'graded_at')
+                'feedback', 'graded_at')
 
 class StudentGradeDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed view of a student's grade"""
@@ -71,6 +71,6 @@ class StudentGradeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
         fields = ('id', 'score', 'feedback', 'graded_at', 'solution_content',
-                 'assignment_title')
+                'assignment_title')
         read_only_fields = ('id', 'graded_at', 'solution_content', 'assignment_title')
 
