@@ -8,11 +8,12 @@ from django.utils.text import slugify
 class Assignment(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
-    title = models.CharField(max_length=255, blank=False, null=False)
-
+    title = models.CharField(max_length=255, blank=False, null=False,unique=True,)
+    is_active = models.BooleanField(default=True)
     description = models.TextField(blank=False, null=False)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     due_date = models.DateField()
+
 
     class Meta:
         verbose_name = "Assignment"
@@ -28,10 +29,10 @@ class Assignment(models.Model):
         super().save(*args, **kwargs)
 
 class Solution(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
-    student    = models.ForeignKey(Profile, on_delete=models.CASCADE, limit_choices_to={'role': 'student'})
-    content   = models.TextField()
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='solutions')
+    student    = models.ForeignKey(Profile, on_delete=models.CASCADE, limit_choices_to={'role': 'student'}, related_name='solutions')
+    content    = models.TextField()
     file_attachment = models.FileField(upload_to='solutions/', blank=True, null=True)
     class Meta:
         verbose_name = "Solution"
@@ -44,8 +45,7 @@ class Solution(models.Model):
 
 
 class Grade(models.Model):
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-    solution   = models.OneToOneField(Solution, on_delete=models.CASCADE)
+    solution   = models.OneToOneField(Solution, on_delete=models.CASCADE, related_name='grade')
     score      = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
     feedback    = models.TextField(blank=True, null=True)
     graded_at = models.DateTimeField(auto_now_add=True)
@@ -69,14 +69,9 @@ class Grade(models.Model):
         return self.solution.assignment.title if self.solution.assignment else "Unknown"
 
     def get_grade(self):
-        return self.grade if self.grade else 0
+        """Return the score of the grade."""
+        return f"Score: {self.score}"
 
-    def get_comment(self):
-        return self.comment if self.comment else "No comment"
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            student_name = self.get_student_name()
-            assignment_title = self.get_assignment_title()
-            self.slug = slugify(f"{assignment_title}-{student_name}")
-        super().save(*args, **kwargs)
+    def get_feedback(self):
+        """Return the feedback for the grade."""
+        return f"Feedback: {self.feedback}"
