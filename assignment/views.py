@@ -10,6 +10,9 @@ from .serializers import (
     StudentSolutionListSerializer,
     AssignmentGradeListSerializer
 )
+from django_ratelimit.decorators import ratelimit
+
+
 from course.models import Course, CourseRegistration
 from account.permessions import IsStudent, IsInstructor
 from rest_framework.authentication import BasicAuthentication
@@ -178,7 +181,7 @@ class AssignmentDetailView(CourseAccessMixin, generics.RetrieveUpdateDestroyAPIV
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
-
+@ratelimit(key='ip', rate='5/m', block=True)
 class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
     """
     API endpoint for managing assignment solutions

@@ -10,32 +10,37 @@
 - **Admin:** Assigns instructors and assistants to courses.  
 - **Instructor:** Manages course content and student activities.  
 - **Assistant:** Supports instructors and supervises content.  
-- **Student:** Can enroll in or leave courses freely.  
+- **Student:** Can enroll in or leave courses during designated time intervals.  
 
 ### 📚 Course Management  
-- Create, update, and manage courses.  
-- Students can enroll or leave courses freely.  
-- Admin assigns instructors and assistants.  
+- Creating, updating, and managing courses.  
+- Students can enroll or leave courses during designated time intervals.  
+- Instructor assigns assistants and instructors to courses.  
+- Instructor can assign assistant permissions to add materials and grade assignments
 
-### 📝 Assignments System  
-- Instructors and assistants can add assignments.  
-- Students can submit their solutions.  
-- Instructors review and grade submissions.  
+### 📝 Assignment System  
+- Instructors and assistants can create assignments.  
+- Students can submit solutions.  
+- Instructors review and grade solutions.  
 
 ### 💬 Chat System  
 - Real-time messaging between students.  
 - Direct messages between students, assistants, and instructors.  
 
 ### 🔔 Notification System  
-- Alerts for new assignments, course updates, and new messages.  
+- Notifications for new assignments, course updates, and new messages.  
 
+### 🎥 Enhanced Course Materials  
+- Support for videos, PDFs, and presentations.  
+
+### 🛡️ Rate Limiting  
+- Prevention of excessive requests and protection against violent attacks using django-ratelimit.
 ---
 
 ## 🔮 Upcoming Features
 
 - ✅ Attendance System (track student presence and generate reports)
 - 🗓️ Timetable & Scheduling (with notifications and reminders)
-- 🎥 Enhanced Course Materials (support for videos, PDFs, and slides)
 - 📊 Student Dashboard & Analytics (progress tracking and insights)
 - 🧪 Quizzes & Exams System (multiple question types with auto-grading)
 - 📈 Gradebook & Transcripts (GPA calculation and exportable transcripts)
@@ -55,7 +60,6 @@
 - **Backend:** Django + Django REST Framework (DRF)  
 - **Database:** PostgreSQL  
 - **Authentication:** JWT / Token-Based Authentication  
-- **Messaging:** WebSockets / Django Channels  
 - **Frontend:** _(Planned for future development)_  
 
 ---

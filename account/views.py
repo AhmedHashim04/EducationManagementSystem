@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from .serializers import ProfileSerializer, RegisterSerializer, ChangePasswordSerializer
 from account.permessions import IsAssistant, IsInstructor, IsStudent
-
+from django_ratelimit.decorators import ratelimit
+@ratelimit(key='ip', rate='5/m', block=True)
 class RegisterAPIView(CreateAPIView):
     model = User
     serializer_class = RegisterSerializer
