@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, CourseMaterial, CourseAssistant
+from course.models import Course, CourseMaterial, CourseAssistant
 from assignment.models import Assignment
 
 

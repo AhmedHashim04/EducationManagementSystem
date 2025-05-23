@@ -1,9 +1,9 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Chat, Message
+from chat.models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer
 from django_ratelimit.decorators import ratelimit
-@ratelimit(key='ip', rate='5/m', block=True)
+
 class ChatListCreateView(generics.ListCreateAPIView):
     """
     API endpoint that allows chats to be viewed or created.
@@ -43,7 +43,6 @@ class ChatDetailView(generics.RetrieveAPIView):
         """Return chats where the user is a participant"""
         return Chat.objects.filter(participants=self.request.user)
 
-@ratelimit(key='ip', rate='5/m', block=True)
 class MessageListCreateView(generics.ListCreateAPIView):
     """
     API endpoint that allows messages to be viewed or created within a chat.
@@ -68,7 +67,8 @@ class MessageListCreateView(generics.ListCreateAPIView):
         )
         messages.exclude(sender=self.request.user).update(is_read=True)
         return messages
-
+    
+    @ratelimit(key='ip', rate='5/m', block=True)
     def perform_create(self, serializer):
         """Create a new message in the chat"""
         chat_id = self.kwargs['chat_id']

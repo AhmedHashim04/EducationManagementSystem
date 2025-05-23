@@ -5,7 +5,7 @@ from account.permessions import IsStudent, IsInstructor, IsAssistant
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .models import Course, CourseRegistration, CourseMaterial, CourseAssistant
+from course.models import Course, CourseRegistration, CourseMaterial, CourseAssistant
 from .serializers import CourseListSerializer, CourseDetailSerializer, CourseMaterialSerializer, CourseAssistantSerializer
 
 from django.shortcuts import get_object_or_404

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Assignment , Solution ,Grade
+from assignment.models import Assignment , Solution ,Grade
 from course.models import Course
 from django.utils.timezone import now
 from django.shortcuts import get_object_or_404

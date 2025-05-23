@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Chat, Message
+from chat.models import Chat, Message
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

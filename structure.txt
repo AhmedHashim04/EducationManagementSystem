@@ -1,0 +1,58 @@
+.
+├── account
+│   ├── admin.py
+│   ├── apps.py
+│   ├── custom_jwt.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── permessions.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── assignment
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── chat
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── course
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests
+│   │   └── test_views.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── db.sqlite3
+├── manage.py
+├── project
+│   ├── asgi.py
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── README.md
+├── requirements.txt
+
+└── structure.txt
+
+8 directories, 49 files
+
+tree -I '__pycache__|migrations|*.pyc|env' > structure.txt
+

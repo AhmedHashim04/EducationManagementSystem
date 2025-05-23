@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Profile
+from account.models import Profile
 
 class RegisterSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=Profile.ROLES, write_only=True)

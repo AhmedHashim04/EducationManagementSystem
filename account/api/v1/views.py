@@ -9,12 +9,16 @@ from django.utils import timezone
 from .serializers import ProfileSerializer, RegisterSerializer, ChangePasswordSerializer
 from account.permessions import IsAssistant, IsInstructor, IsStudent
 from django_ratelimit.decorators import ratelimit
-@ratelimit(key='ip', rate='5/m', block=True)
+
 class RegisterAPIView(CreateAPIView):
     model = User
     serializer_class = RegisterSerializer
-    
 
+    @ratelimit(key='ip', rate='5/m', block=True)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
+    
 class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     authentication_classes = [CustomJWTAuthentication]

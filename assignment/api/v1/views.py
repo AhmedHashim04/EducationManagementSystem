@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import Assignment, Solution, Grade
+from assignment.models import Assignment, Solution, Grade
 from .serializers import (
     CourseAssignmentCreateSerializer,
     AssignmentSolutionSerializer,
@@ -181,7 +181,6 @@ class AssignmentDetailView(CourseAccessMixin, generics.RetrieveUpdateDestroyAPIV
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
-@ratelimit(key='ip', rate='5/m', block=True)
 class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
     """
     API endpoint for managing assignment solutions
@@ -213,6 +212,7 @@ class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
             403: "Permission denied"
         }
     )
+    @ratelimit(key='ip', rate='5/m', block=True)
     def post(self, request, *args, **kwargs):
         course = self.get_course()
         assignment = self.get_assignment()
@@ -339,6 +339,7 @@ class AssignmentSolutionView(CourseAccessMixin, generics.GenericAPIView):
             404: "Solution not found"
         }
     )
+    @ratelimit(key='ip', rate='5/m', block=True)
     def delete(self, request, *args, **kwargs):
         course = self.get_course()
         assignment = self.get_assignment()
